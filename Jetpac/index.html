@@ -1,0 +1,445 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>Multiplayer Jetpac</title>
+    <script src="phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+var config = {
+    type: Phaser.AUTO,
+    width: 8*32,
+    height: 24*8,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 300 },
+            debug: false
+        }
+    },
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    },
+    zoom:3
+};
+
+var ships;
+var shipLevel=2;
+var player;
+var stars;
+var bombs;
+var platforms;
+var cursors;
+var score = 0;
+var gameOver = false;
+var scoreText;
+var bullets;
+var lastFired = 0;
+var spaceKey;
+
+var game = new Phaser.Game(config);
+
+function preload ()
+{
+    //this.load.image('bomb', 'assets/bomb.png');
+
+    this.load.spritesheet('bullet', 'sprites/bullet.png', 
+    { frameWidth: 195, frameHeight: 1 });
+
+    this.load.spritesheet('ships', 'sprites/ships.png', 
+    { frameWidth: 16, frameHeight: 16 });
+
+    this.load.spritesheet('goodies', 'sprites/goodies.png', 
+    { frameWidth: 16, frameHeight: 13 });
+
+    this.load.spritesheet('ground', 'sprites/floor.png', 
+    { frameWidth: 8, frameHeight: 8 });
+
+    this.load.spritesheet('dude', 'sprites/player.png', 
+    { frameWidth: 14, frameHeight: 24 });
+    this.load.spritesheet('dudeflying', 'sprites/playerflying.png', 
+    { frameWidth: 16, frameHeight: 24 });
+}
+
+function create ()
+{
+    var Bullet = new Phaser.Class({
+        Extends: Phaser.GameObjects.Image,
+
+        initialize: function Bullet (scene)
+        {
+            bullets = this.physics.add.group({ });
+            //Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet');
+            Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet');
+            this.bullet=bullets.create(0,0,"bullet",0);
+            this.speed = Phaser.Math.GetSpeed(200, 1);
+        },
+
+        fire: function (x, y,lastDir)
+        {
+            this.direction=lastDir;
+            this.startX=x;
+            if (lastDir=="left")
+                this.setPosition(x-32, y-2 );
+            else
+                this.setPosition(x+10+22, y-2 );
+
+            this.setActive(true);
+            this.setVisible(true);
+        },
+
+        update: function (time, delta)
+        {
+            if (this.direction=="left")
+                this.x -= this.speed * delta;
+            else
+            this.x += this.speed * delta;
+
+            if (Math.abs(this.x-this.startX) > 200)
+            {
+                this.setActive(false);
+                this.setVisible(false);
+            }
+        }
+
+    });
+
+    bullets = this.physics.add.group({
+        key: 'bullet',
+        repeat: 5
+    });
+
+
+
+    //#region BACKGROUND
+    //  The platforms group contains the ground and the 2 ledges we can jump on
+    platforms = this.physics.add.staticGroup();
+
+    //  Here we create the ground.
+    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+//    platforms.create(400, 568, 'ground').setScale(2).refreshBody();
+    //  Now let's create some ledges
+    var x=5*8;
+    var y=10*8;
+    platforms.create(x, y, 'ground',0,true,true );
+    for(var i=1;i<5;i++)
+        platforms.create(x+i*8, y, 'ground',1,true,true );
+    platforms.create(x+i*8, y, 'ground',2,true,true );
+
+    x=24*8;
+    y=7*8
+    platforms.create(x, y, 'ground',0,true,true );
+    for(var i=1;i<5;i++)
+        platforms.create(x+i*8, y, 'ground',1,true,true );
+    platforms.create(x+i*8, y, 'ground',2,true,true );
+
+    x=15*8;
+    y=13*8;
+    platforms.create(x, y, 'ground',0,true,true );
+    for(var i=1;i<3;i++)
+        platforms.create(x+i*8, y, 'ground',1,true,true );
+    platforms.create(x+i*8, y, 'ground',2,true,true );
+
+    //GROUND
+    var x=0;
+    var y=8*24;
+    platforms.create(x, y, 'ground',3,true,true );
+    for(var i=1;i<31*2;i++)
+        platforms.create(x+i*8, y, 'ground',4,true,true );
+    for(var i=1;i<31*2;i++)
+        platforms.create(x+i*8, -4, 'ground',4,true,true );
+    platforms.create(x+i*8, y, 'ground',5,true,true );
+    //#endregion
+
+    // The player and its settings
+    player = this.physics.add.sprite(100, 8*16, 'dude');
+
+    //  Player physics properties. Give the little guy a slight bounce.
+    player.setBounce(0.2);
+    //player.setCollideWorldBounds(true);
+
+    //  Our player animations, turning, walking left and walking right.
+    this.anims.create({
+        key: 'left',
+        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+        frameRate: 10,
+        repeat: -1
+    });
+    this.anims.create({
+        key: 'leftflying',
+        frames: this.anims.generateFrameNumbers('dudeflying', { start: 0, end: 3 }),
+        frameRate: 10,
+        repeat: -1
+    });
+    this.anims.create({
+        key: 'right',
+        frames: this.anims.generateFrameNumbers('dude', { start: 4, end: 7 }),
+        frameRate: 10,
+        repeat: -1
+    });
+    this.anims.create({
+        key: 'rightflying',
+        frames: this.anims.generateFrameNumbers('dudeflying', { start: 4, end: 7 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    //  Input Events
+    cursors = this.input.keyboard.createCursorKeys();
+    spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+    //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
+    stars = this.physics.add.group({
+        key: 'goodies',
+        repeat: 4,
+        setXY: { x: 12, y: 0, stepX: 70 }
+    });
+
+    //#region ADD SHIP PARTS
+    ships = this.physics.add.group({
+    });
+
+    var ship=ships.create(8*17-4,8,"ships",4*(shipLevel-1));
+    ship.shipLevel=shipLevel-1;
+
+    var ship1=ships.create(8*8-4,8,"ships",4*(shipLevel-2));
+    ship1.shipLevel=shipLevel-2;
+
+    var ship2=ships.create(8*22-4,8*22+3,"ships",4*shipLevel);
+    ship2.shipLevel=shipLevel;
+    ship2.body.setVelocityY(0);
+    ship2.body.setImmovable();
+    ship2.body.setAllowGravity(false);
+    ship2.frozen=true;
+
+    ships.children.iterate(function(child){ 
+        child.setBounceY(0.4);
+    });
+    //#endregion
+
+    stars.children.iterate(function (child) {
+
+        //  Give each star a slightly different bounce
+        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.5));
+        child.setTint(0xff00dc);
+
+    });
+
+    //bombs = this.physics.add.group();
+
+    //  The score
+    scoreText = this.add.text(0, 0, 'score: 0', { fontSize: '8px', fill: 'white' });
+
+    //  Collide the player and the stars with the platforms
+    this.physics.add.collider(ships, platforms);
+    this.physics.add.collider(player, platforms);
+    this.physics.add.collider(stars, platforms);
+    //this.physics.add.collider(bombs, platforms);
+
+    //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
+    this.physics.add.overlap(player, stars, carryStar, null, this);
+    this.physics.add.overlap(player, ships, carryShip, null, this);
+
+    //this.physics.add.collider(player, bombs, hitBomb, null, this);
+}
+
+const VELOCITYGROUND=40;
+const VELOCITYFLYING=70;
+var lastDir="left";
+function update (time, delta)
+{
+    if (gameOver)
+    {
+        return;
+    }
+
+    player.setVelocityX(0);
+    if(player.body.touching.down)
+    {
+        if (cursors.left.isDown)
+        {
+            player.setVelocityX(-VELOCITYGROUND);
+
+            player.anims.play('left', true);
+            lastDir="left";
+        }
+        else if (cursors.right.isDown)
+        {
+            player.setVelocityX(VELOCITYGROUND);
+
+            player.anims.play('right', true);
+            lastDir="right";
+        }
+        else
+            player.anims.play(lastDir, false);
+
+    }
+    else
+    {
+        if (cursors.left.isDown)
+        {
+            player.setVelocityX(-VELOCITYFLYING);
+
+            player.anims.play('leftflying', true);
+            lastDir="left";
+        }
+        else if (cursors.right.isDown)
+        {
+            player.setVelocityX(VELOCITYFLYING);
+
+            player.anims.play('rightflying', true);
+            lastDir="right";
+        }
+        else
+            player.anims.play(lastDir+'flying', true);
+    }
+
+    if (spaceKey.isDown && time > lastFired)
+    {
+        //AQUI 
+        var x;
+        var v;
+        var spritePos=1;
+        this.direction=lastDir;
+        if (lastDir=="left"){
+            x=player.x-32;
+            v=-300;
+        }
+        else
+        {
+            x=player.x+10+22;
+            v=300;
+            spritePos=0;
+        } 
+        this.startX=x;
+
+        var bullet=bullets.create(x,player.y-2,"bullet",spritePos);
+        bullet.setVelocityY(0);
+        bullet.setVelocityX(v);
+        bullet.setImmovable();
+        bullet.displayWidth=20;
+        bullet.body.setAllowGravity(false);
+
+
+        //bullet = Phaser.Math.GetSpeed(200, 1);
+
+        // var bullet = bullets.get();
+
+        // if (bullet)
+        // {
+        //     bullet.fire(player.x, player.y,lastDir);
+
+        lastFired = time + 100;
+        // }
+    }
+    if (player.carry!=null)
+    {
+        player.carry.x=player.x;
+        player.carry.y=player.y+6;
+        if (player.x>=8*22-4 && player.x<=8*24-4){
+            player.carry.x=8*22-4;
+            player.carry.frozen=true;
+            player.carry=null;
+
+            shipLevel--;
+            // if (shipLevel>=0){
+            //     var ship=ships.create(80,8,"ships",4*shipLevel);
+            //     ship.shipLevel=shipLevel;
+            // }
+        }
+    }
+
+    ships.children.iterate(function(ship){
+        if (ship.frozen){
+            ship.x=8*22-4;
+            var y=147+ship.shipLevel*16;
+            if (ship.y-y>0){
+                ship.allowGravity=false;
+                ship.body.setVelocityY(0);
+                ship.body.setImmovable();
+                ship.body.setAllowGravity(false);
+                ship.y=y;
+            }
+
+        }
+    })
+
+    //    if (cursors.up.isDown && player.body.touching.down)
+    if (cursors.up.isDown )
+    {
+        player.setVelocityY(-100);
+    }
+    this.cameras.main.setBounds(0, 0, 2*config.width, config.height);
+    this.cameras.main.startFollow(player);
+    this.cameras.main.roundPixels = true; // avoid tile bleed
+
+}
+
+function carryShip(player,ship){
+    if (!ship.frozen){
+        ship.setBounceY(0);
+        player.carry=ship;
+    }
+}
+
+function carryStar (player, star)
+{
+    if (!star.frozen){
+        star.setBounceY(0);
+        player.carry=star;
+    }
+}
+
+function collectStar (player, star)
+{
+    star.disableBody(true, true);
+
+    //  Add and update the score
+    score += 10;
+    scoreText.setText('Score: ' + score);
+
+    if (stars.countActive(true) === 0)
+    {
+        //  A new batch of stars to collect
+        stars.children.iterate(function (child) {
+
+            child.enableBody(true, child.x, 0, true, true);
+
+        });
+
+        var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+
+        var bomb = bombs.create(x, 16, 'bomb');
+        bomb.setBounce(1);
+        bomb.setCollideWorldBounds(true);
+        bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+        bomb.allowGravity = false;
+
+    }
+}
+
+function hitBomb (player, bomb)
+{
+    this.physics.pause();
+
+    player.setTint(0xff0000);
+
+    player.anims.play('turn');
+
+    gameOver = true;
+}
+
+</script>
+
+</body>
+</html>

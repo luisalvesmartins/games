@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Crapot</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+
+    <script src="interact.min.js"></script>
+    <script src="gameobjects.js"></script>
+    <script src="crapot.js"></script>
+    <link href="crapot.css" rel="stylesheet" type="text/css"/>
+
+    <style>
+.drop-target {
+  background-color: rgb(131, 131, 131);
+  border-color: #fff;
+  border: black 1pt solid;
+  opacity: 0.5;
+}
+
+/* .drag-drop {
+  display: inline-block;
+  min-width: 40px;
+  padding: 2em 0.5em;
+
+  color: #fff;
+  background-color: #29e;
+  border: solid 2px #fff;
+
+  -webkit-transform: translate(0px, 0px);
+          transform: translate(0px, 0px);
+
+  transition: background-color 0.3s;
+} */
+    </style>
+  </head>
+  <body>
+    <div id="header">crapot</div>
+    <div id="container">
+        <div id="boardDiv"></div>
+        <div id="playersDiv"></div>
+        <input type="button" onclick="AIStrategy()" value="AI"/>
+      </div>
+  </body>
+</html>

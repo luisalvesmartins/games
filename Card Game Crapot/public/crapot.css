@@ -1,0 +1,69 @@
+.pileHost {
+    position:relative;
+    height:110px;
+    width:75px;
+}
+.pileHostCenter{
+    position:relative;
+    height:110px;
+    width:75px;
+    margin-left:10px;
+}
+.pileHostRight{
+    position:relative;
+    height:110px;
+    width:255px;
+    margin-left:10px;
+}
+.pileHostLeft{
+    position:relative;
+    height:110px;
+    width:255px;
+    margin-left:10px;
+}
+.card {
+    width:75px;
+    position:absolute;
+    top:0;
+}
+
+.row{
+    clear:both;
+    margin-bottom: 10px;
+}
+.row >div{
+    margin-top:10px;
+    float:left;
+}
+
+body{
+    margin:0;
+    background-color: rgb(0, 110, 0);
+}
+#header{
+    font-family: Arial, Helvetica, sans-serif;
+    font-size:18pt;
+    background-color:rgb(0, 82, 0);
+    padding:10px;
+    color:white;
+}
+#container{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items:center;
+    }
+.player{ 
+    border:solid 1pt;
+    margin-top:10px;
+    height:150px;
+    font-family: Arial, Helvetica, sans-serif;
+    padding-left: 5px;
+    padding-right: 15px;
+}
+.p1 {  background-color:rgb(36, 196, 196);}
+.p2 {  background-color:rgb(28, 168, 63);}
+.playing{
+    border-color:white;
+    color:white;
+}
