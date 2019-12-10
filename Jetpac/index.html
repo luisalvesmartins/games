@@ -13,7 +13,6 @@
 <body>
 
 <script type="text/javascript">
-
 var config = {
     type: Phaser.AUTO,
     width: 8*32,
@@ -44,6 +43,7 @@ var score = 0;
 var gameOver = false;
 var scoreText;
 var bullets;
+var bulletN = 0;
 var lastFired = 0;
 var spaceKey;
 
@@ -73,51 +73,48 @@ function preload ()
 
 function create ()
 {
-    var Bullet = new Phaser.Class({
-        Extends: Phaser.GameObjects.Image,
+    // var Bullet = new Phaser.Class({
+    //     Extends: Phaser.GameObjects.Image,
 
-        initialize: function Bullet (scene)
-        {
-            bullets = this.physics.add.group({ });
-            //Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet');
-            Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet');
-            this.bullet=bullets.create(0,0,"bullet",0);
-            this.speed = Phaser.Math.GetSpeed(200, 1);
-        },
+    //     initialize: function Bullet (scene)
+    //     {
+    //         bullets = this.physics.add.group({ });
+    //         //Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet');
+    //         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet');
+    //         this.bullet=bullets.create(0,0,"bullet",0);
+    //         this.speed = Phaser.Math.GetSpeed(200, 1);
+    //     },
 
-        fire: function (x, y,lastDir)
-        {
-            this.direction=lastDir;
-            this.startX=x;
-            if (lastDir=="left")
-                this.setPosition(x-32, y-2 );
-            else
-                this.setPosition(x+10+22, y-2 );
+    //     fire: function (x, y,lastDir)
+    //     {
+    //         this.direction=lastDir;
+    //         this.startX=x;
+    //         if (lastDir=="left")
+    //             this.setPosition(x-32, y-2 );
+    //         else
+    //             this.setPosition(x+10+22, y-2 );
 
-            this.setActive(true);
-            this.setVisible(true);
-        },
+    //         this.setActive(true);
+    //         this.setVisible(true);
+    //     },
 
-        update: function (time, delta)
-        {
-            if (this.direction=="left")
-                this.x -= this.speed * delta;
-            else
-            this.x += this.speed * delta;
+    //     update: function (time, delta)
+    //     {
+    //         if (this.direction=="left")
+    //             this.x -= this.speed * delta;
+    //         else
+    //         this.x += this.speed * delta;
 
-            if (Math.abs(this.x-this.startX) > 200)
-            {
-                this.setActive(false);
-                this.setVisible(false);
-            }
-        }
+    //         if (Math.abs(this.x-this.startX) > 200)
+    //         {
+    //             this.setActive(false);
+    //             this.setVisible(false);
+    //         }
+    //     }
 
-    });
+    // });
 
-    bullets = this.physics.add.group({
-        key: 'bullet',
-        repeat: 5
-    });
+    bullets = this.physics.add.group({    });
 
 
 
@@ -161,6 +158,7 @@ function create ()
     platforms.create(x+i*8, y, 'ground',5,true,true );
     //#endregion
 
+    //#region player
     // The player and its settings
     player = this.physics.add.sprite(100, 8*16, 'dude');
 
@@ -197,36 +195,37 @@ function create ()
     //  Input Events
     cursors = this.input.keyboard.createCursorKeys();
     spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-
-    //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
-    stars = this.physics.add.group({
-        key: 'goodies',
-        repeat: 4,
-        setXY: { x: 12, y: 0, stepX: 70 }
-    });
+    //#endregion
 
     //#region ADD SHIP PARTS
-    ships = this.physics.add.group({
-    });
+    ships = this.physics.add.group({  });
 
-    var ship=ships.create(8*17-4,8,"ships",4*(shipLevel-1));
+    var ship=this.physics.add.sprite(8*17-4,8,"ships",4*(shipLevel-1));
     ship.shipLevel=shipLevel-1;
+    ships.add(ship);
 
-    var ship1=ships.create(8*8-4,8,"ships",4*(shipLevel-2));
+    var ship1=this.physics.add.sprite(8*8-4,8,"ships",4*(shipLevel-2));
     ship1.shipLevel=shipLevel-2;
+    ships.add(ship1);
 
-    var ship2=ships.create(8*22-4,8*22+3,"ships",4*shipLevel);
+    var ship2=this.physics.add.sprite(8*22-4,8*22+3,"ships",4*shipLevel);
     ship2.shipLevel=shipLevel;
-    ship2.body.setVelocityY(0);
-    ship2.body.setImmovable();
-    ship2.body.setAllowGravity(false);
     ship2.frozen=true;
+    ships.add(ship2);
+
+    shipLevel=1;
 
     ships.children.iterate(function(child){ 
         child.setBounceY(0.4);
     });
     //#endregion
 
+    //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
+    stars = this.physics.add.group({
+        key: 'goodies',
+        repeat: 0,
+        setXY: { x: 12, y: 0, stepX: 70 }
+    });
     stars.children.iterate(function (child) {
 
         //  Give each star a slightly different bounce
@@ -247,9 +246,8 @@ function create ()
     //this.physics.add.collider(bombs, platforms);
 
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-    this.physics.add.overlap(player, stars, carryStar, null, this);
-    this.physics.add.overlap(player, ships, carryShip, null, this);
-
+    this.physics.add.overlap(player, stars, carryStar,null,this);
+    this.physics.add.overlap(player, ships, carryShip,null,this);
     //this.physics.add.collider(player, bombs, hitBomb, null, this);
 }
 
@@ -304,30 +302,65 @@ function update (time, delta)
             player.anims.play(lastDir+'flying', true);
     }
 
+    for (let i = 0; i < bullets.children.size; i++) {
+        const b = bullets.children.entries[i];
+
+        if (b.disWidth<100)
+            b.disWidth+=5;
+        b.displayWidth=b.disWidth;
+        if (Math.abs(b.origin-b.x)>160)
+        {
+            //b.setVisible(false);
+            b.disableBody(true,true);
+            b.destroy(true)
+            bullets.remove(b);
+            i--;
+        }
+        
+    }
     if (spaceKey.isDown && time > lastFired)
     {
         //AQUI 
-        var x;
-        var v;
+        var x=player.x-20;
+        var v=-300;
         var spritePos=1;
         this.direction=lastDir;
-        if (lastDir=="left"){
-            x=player.x-32;
-            v=-300;
-        }
-        else
-        {
-            x=player.x+10+22;
+        if (lastDir=="right"){
+            x=player.x+20;
             v=300;
             spritePos=0;
         } 
-        this.startX=x;
+        this.startX=x; 
 
         var bullet=bullets.create(x,player.y-2,"bullet",spritePos);
+        bulletN++;
+        var c;
+        if (bulletN>4)
+            bulletN=0;
+        switch (bulletN) {
+            case 0:
+                c=0xFFFFFF;
+                break;
+            case 1:
+                c=0xFF0000;
+                break;
+            case 2:
+                c=0xFF00FF;
+                break;
+            case 3:
+                c=0x7FFFFF;
+                break;
+        
+            default:
+                break;
+        }
+        bullet.origin=x;
+        bullet.setTint(c)
+        bullet.disWidth=30;
         bullet.setVelocityY(0);
         bullet.setVelocityX(v);
         bullet.setImmovable();
-        bullet.displayWidth=20;
+        bullet.displayWidth=bullet.disWidth;
         bullet.body.setAllowGravity(false);
 
 
@@ -386,7 +419,7 @@ function update (time, delta)
 }
 
 function carryShip(player,ship){
-    if (!ship.frozen){
+    if (!ship.frozen && shipLevel==ship.shipLevel){
         ship.setBounceY(0);
         player.carry=ship;
     }
@@ -412,7 +445,6 @@ function collectStar (player, star)
     {
         //  A new batch of stars to collect
         stars.children.iterate(function (child) {
-
             child.enableBody(true, child.x, 0, true, true);
 
         });
