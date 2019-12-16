@@ -1,0 +1,683 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>mpRally</title>
+    <script src="phaser.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<script>
+
+var scoreText;
+var score=0;
+var flags;
+var obstacles;
+const PLAYER_SIZE=16;
+const VELOCITY=24*4;
+const NUMBER_OF_ENEMIES=-1;
+var socket;
+var id=null;
+var otherPlayers;
+var Flag=[];
+
+//#region BootScene
+class BootScene extends Phaser.Scene {
+  constructor() {
+    super({
+      key: 'BootScene',
+      active: true
+    });
+  }
+
+  preload() {
+    // map tiles
+    this.load.image('tiles', 'assets/map/spritesheet.png');
+    // map in json format
+    this.load.tilemapTiledJSON('map', 'assets/map/map4.json');
+    // our two characters
+    this.load.spritesheet('player', 'assets/cars.png', {
+      frameWidth: 16,
+      frameHeight: 16
+    });
+  }
+
+  create() {
+    this.scene.start('WorldScene');
+  }
+}
+// #endregion
+
+class WorldScene extends Phaser.Scene {
+  constructor() {
+    super({
+      key: 'WorldScene'
+    });
+  }
+
+  create() {
+    socket = io();
+    otherPlayers = this.physics.add.group();
+
+    // create map
+    this.createMap();
+
+    // create player animations
+    this.createAnimations();
+
+    // user input
+    this.cursors = this.input.keyboard.createCursorKeys();
+
+    // create enemies
+    this.createEnemies();
+
+    flags = this.physics.add.group({
+          key:"player",frame:48,
+          repeat:9
+    });
+
+
+    var player={
+      x:492,
+      y:1284,
+      playerId:socket.id
+    }
+
+
+    //this.createPlayer(player,true);
+
+    scoreText = this.add.text(8, 8, 
+        'Score: 0', 
+        { fontSize: '12px', 
+            fill: '#000',
+            font: "12px monospace",
+            backgroundColor: "lightgray", padding:1 }
+            ).setScrollFactor(0);
+
+    socket.on("connect",function(){
+      id=socket.id;
+      console.log("ID:" + id)      
+    });
+
+
+    // listen for web socket events
+    socket.on('currentPlayers', function (players,flagList) {
+      console.log("currentPlayers")
+      console.log("ID:" + id)      
+      console.log(players);
+      Object.keys(players).forEach(function (gamer) {
+        if (players[gamer].playerId == id) {
+          console.log("CREATE PLAYER")
+          this.player = this.addPlayer(players[gamer],"");
+          // update camera
+          // limit camera to map
+          this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+          this.cameras.main.startFollow(this.player);
+          this.cameras.main.roundPixels = true; // avoid tile bleed
+
+        } else {
+          if (players[gamer].playerId>""){
+            console.log("ADDING")
+            console.log(players[gamer])
+            console.log(players[gamer].playerId);
+            otherPlayers.add( this.addPlayer(players[gamer],"adversary") );
+          }
+        }
+      }.bind(this));
+      // create flags
+      this.createFlags(flagList);
+
+    }.bind(this));
+
+
+    socket.on('collectFlag', function (flag) {
+      flags.children.iterate(function (child) {
+        if (child.id==flag.id){
+          child.x=flag.x*24+12;
+          child.y=flag.y*24+12;
+          child.setVelocityX(0);
+          child.setVelocityY(0);
+        }
+      });
+    }.bind(this));
+
+
+    socket.on('newPlayer', function (playerInfo) {
+      console.log("newPlayer")
+      console.log(playerInfo);
+      console.log("ID:" + id)      
+      otherPlayers.add( this.addPlayer(playerInfo,"adversary") );
+    }.bind(this));
+
+    socket.on('disconnect', function (playerId) {
+      console.log("disconnect")
+      console.log("ID:" + id)      
+      otherPlayers.getChildren().forEach(function (player) {
+        if (playerId === player.playerId) {
+          player.destroy();
+        }
+      }.bind(this));
+    }.bind(this));
+
+    socket.on('playerMoved', function (playerInfo) {
+      //console.log("playerMoved")
+      otherPlayers.getChildren().forEach(function (player) {
+        if (playerInfo.playerId === player.playerId) {
+          //console.log("playerMoved")
+          var oldDirection=player.direction;
+          player.setPosition(playerInfo.x, playerInfo.y);
+          player.direction=playerInfo.direction;
+          player.velocityX=playerInfo.velocityX;
+          player.velocityY=playerInfo.velocityY;
+          //player.anims.play("enemy"+'up', true);
+          player.scene.animateDirection(oldDirection,player.direction,"adversary",player);
+        }
+      }.bind(this));
+    }.bind(this));
+
+  }
+
+  // #region createMap & createAnimations
+  createMap() {
+    // create the map
+    this.map = this.make.tilemap({
+      key: 'map'
+    });
+
+    // first parameter is the name of the tilemap in tiled
+    var tiles = this.map.addTilesetImage('spritesheet', 'tiles', 24, 24, 0, 0);
+
+    // creating the layers
+    this.map.createStaticLayer('Background', tiles, 0, 0);
+    obstacles=this.map.createStaticLayer('Obstacles', tiles, 0, 0);
+    obstacles.setCollisionByExclusion([-1]);
+
+    // don't go out of the map
+    this.physics.world.bounds.width = this.map.widthInPixels;
+    this.physics.world.bounds.height = this.map.heightInPixels;
+  }
+  createAnimations() {
+    this.createAnimationsCore(0,"");
+    this.createAnimationsCore(12,"enemy");
+    this.createAnimationsCore(36,"adversary");
+    }
+  createAnimationsCore(n,prefix){
+    this.anims.create({
+      key: prefix+'left',
+      frames: this.anims.generateFrameNumbers('player', {
+        frames: [n+9]
+      })
+    });
+    this.anims.create({
+      key: prefix+'upright',
+      frames: this.anims.generateFrameNumbers('player', {
+        frames: [n+1,n+2,n+3]
+      })
+    });
+    this.anims.create({
+      key: prefix+'downright',
+      frames: this.anims.generateFrameNumbers('player', {
+        frames: [n+5,n+4,n+3]
+      })
+    });
+    this.anims.create({
+      key: prefix+'downleft',
+      frames: this.anims.generateFrameNumbers('player', {
+        frames: [n+7,n+8,n+9]
+      }),
+      skipMissedFrames:false,
+      frameRate:10,
+    });
+    this.anims.create({
+      key: prefix+'upleft',
+      frames: this.anims.generateFrameNumbers('player', {
+        frames: [n+11,n+10,n+9]
+      })
+    });
+    this.anims.create({
+      key: prefix+'leftup',
+      frames: this.anims.generateFrameNumbers('player', {
+        frames: [n+10,n+11,n+0]
+      })
+    });
+    this.anims.create({
+      key: prefix+'leftdown',
+      frames: this.anims.generateFrameNumbers('player', {
+        frames: [n+8,n+7,n+6]
+      })
+    });
+    this.anims.create({
+      key: prefix+'rightup',
+      frames: this.anims.generateFrameNumbers('player', {
+        frames: [n+2,n+1,n+0]
+      }),
+      skipMissedFrames:false
+    });
+    this.anims.create({
+      key: prefix+'rightdown',
+      frames: this.anims.generateFrameNumbers('player', {
+        frames: [n+4,n+5,n+6]
+      }),
+      skipMissedFrames:false,
+      frameRate:10,
+    });
+    // animation with key 'right'
+    this.anims.create({
+      key: prefix+'right',
+      frames: this.anims.generateFrameNumbers('player', {
+        frames: [n+3]
+      })
+    });
+    this.anims.create({
+      key: prefix+'up',
+      frames: this.anims.generateFrameNumbers('player', {
+        frames: [n+0]
+      }),
+      frameRate: 10,
+      repeat: -1
+    });
+    this.anims.create({
+      key: prefix+'down',
+      frames: this.anims.generateFrameNumbers('player', {
+        frames: [n+6]
+      }),
+      frameRate: 10,
+      repeat: -1
+    });
+}
+  // #endregion
+
+  createFlags(flagList){
+    var i=0;
+    flags.children.iterate(function (child) {
+        child.x=flagList[i].x*24+12;
+        child.y=flagList[i].y*24+12;
+        child.id=flagList[i].id;
+        i++;
+    });
+  }
+  collectFlag(player, flag)
+  {
+    score += 10;
+    scoreText.setText('Score: ' + score);
+
+    var t=1;
+    var x,y;
+    while(t!=null){
+        x=Math.round(Math.random()*40);
+        y=Math.round(Math.random()*62);
+        t=obstacles.getTileAt(x,y);
+    }
+    flag.x=x;
+    flag.y=y;
+    socket.emit("collectFlag",{id:flag.id, x:flag.x, y:flag.y});
+    flag.x=x*24+12;
+    flag.y=y*24+12;
+    flag.setVelocityX(0);
+    flag.setVelocityY(0);
+  }
+
+ 
+  addPlayer(playerInfo,friendOrFoe){
+    // our player sprite created through the physics system
+    var sprite=0;
+    switch (playerInfo.direction) {
+      case 0:
+        sprite=9;
+        break;
+      case 2:
+        sprite=3;
+        break;
+      case 1:
+        sprite=0;
+        break;
+      case 3:
+        sprite=6;
+        break;
+      default:
+        break;
+    } 
+    if (friendOrFoe=="adversary")
+      sprite+=12*3;
+    console.log("SPRITE:" + sprite)
+    var playerObject = this.add.sprite(playerInfo.x, playerInfo.y, 'player', sprite);
+    this.physics.world.enable(playerObject);
+
+    this.physics.add.collider(playerObject, this.spawns);
+    this.physics.add.collider(playerObject, obstacles,this.collide);
+    if (friendOrFoe==""){
+      this.physics.add.collider(playerObject, flags, this.collectFlag);
+    }
+
+    playerObject.velocityX=0;
+    playerObject.velocityY=0;
+    playerObject.direction=playerInfo.direction;
+    playerObject.playerId=playerInfo.playerId;
+    playerObject.adversary=friendOrFoe;
+    return playerObject;
+  }
+
+  collideEnemies (bodyA, bodyB)
+  {
+      var oldDirection=bodyA.direction;
+
+      var r=Math.random();
+      if (r>0.5)
+          bodyA.direction++;
+      else
+          bodyA.direction--;
+      if (bodyA.direction>3)
+          bodyA.direction=0;
+      if (bodyA.direction<0)
+          bodyA.direction=3;
+      switch (bodyA.direction) {
+      case 0: //LEFT
+          bodyA.velocityX=-VELOCITY;
+          bodyA.velocityY=0;
+          break;
+      case 2: //RIGHT
+          bodyA.velocityX=VELOCITY;
+          bodyA.velocityY=0;
+          break;
+      case 1: //UP
+          bodyA.velocityX=0;
+          bodyA.velocityY=-VELOCITY;
+          break;
+      case 3: //DOWN
+          bodyA.velocityX=0;
+          bodyA.velocityY=VELOCITY;
+          break;
+  
+      default:
+          break;
+      }
+      bodyA.scene.animateDirection(oldDirection, bodyA.direction,"enemy", bodyA.scene.spawns.getChildren()[bodyA.id]);
+      return false;
+  }
+  collide (bodyA, bodyB)
+  {
+      if (bodyB.layer.name=="Obstacles")
+      {
+          var currentDirection=bodyA.direction;
+          var oldDirection=bodyA.oldDirection;
+          //console.log(currentDirection + " " + oldDirection);
+          if (currentDirection==oldDirection){
+              bodyA.direction++;
+          }
+          else{
+              bodyA.direction=oldDirection;
+          }
+          if (bodyA.direction>3)
+              bodyA.direction=0;
+          switch (bodyA.direction) {
+              case 0: //LEFT
+                  bodyA.velocityX=-VELOCITY;
+                  bodyA.velocityY=0;
+                  break;
+              case 2: //RIGHT
+                  bodyA.velocityX=VELOCITY;
+                  bodyA.velocityY=0;
+                  break;
+              case 1: //UP
+                  bodyA.velocityX=0;
+                  bodyA.velocityY=-VELOCITY;
+                  break;
+              case 3: //DOWN
+                  bodyA.velocityX=0;
+                  bodyA.velocityY=VELOCITY;
+                  break;
+          
+              default:
+                  break;
+          }
+          if (bodyA.adversary=="adversary")
+            bodyA.scene.animateDirection(currentDirection, bodyA.direction,"adversary",bodyA);
+          else
+            bodyA.scene.animateDirection(currentDirection, bodyA.direction,"",bodyA);
+
+          socket.emit('playerMovement', 
+          { 
+            playerId:bodyA.playerId,
+            x:bodyA.x, 
+            y:bodyA.y,
+            direction:bodyA.direction,
+            velocityX:bodyA.velocityX,
+            velocityY:bodyA.velocityY
+         });
+
+          return false;
+      }
+  }
+
+
+  createEnemies() {
+    // where the enemies will be
+    this.spawns = this.physics.add.group({
+      classType: Phaser.GameObjects.Sprite
+    });
+    for (var i = 0; i < NUMBER_OF_ENEMIES; i++) {
+      // parameters are x, y, width, height
+      var enemy = this.spawns.create(492+24*2*i-96, 1430, "player",12);
+      enemy.direction=1;
+      enemy.id=i;
+      //enemy.body.setCollideWorldBounds(true);
+      this.physics.add.collider(enemy, this.spawns, this.collideEnemies);
+      this.physics.add.collider(enemy, obstacles, this.collideEnemies);
+
+      enemy.body.setImmovable();
+    }
+
+    // move enemies
+    this.timedEvent = this.time.addEvent({
+      delay: 10,
+      callback: this.moveEveryone,
+      callbackScope: this,
+      loop: true
+    });
+  }
+
+  moveEveryone(){
+    if (this.player){
+      this.player.body.setVelocityX(this.player.velocityX);
+      this.player.body.setVelocityY(this.player.velocityY);
+    }
+
+    if (otherPlayers.getChildren().length>0)
+        otherPlayers.getChildren().forEach(function(player){
+        if (player.playerId!=null){
+          var velocityX=0;
+          var velocityY=0;
+          switch (player.direction) {
+              case 0:
+                  velocityX=-VELOCITY;
+                  velocityY=0;
+                  break;
+              case 1:
+                  velocityX=0;
+                  velocityY=-VELOCITY;
+                  break;
+              case 2:
+                  velocityX=VELOCITY;
+                  velocityY=0;
+                  break;
+              case 3:
+                  velocityX=0;
+                  velocityY=VELOCITY;
+                  break;
+        
+              default:
+                  break;
+          }
+
+          player.body.setVelocityX(player.velocityX);
+          player.body.setVelocityY(player.velocityY);
+        }
+      });
+
+      //MOVEENEMIES
+      this.spawns.getChildren().forEach((enemy) => {
+          var velocityX=0;
+          var velocityY=0;
+          switch (enemy.direction) {
+              case 0:
+                  velocityX=-VELOCITY;
+                  velocityY=0;
+                  break;
+              case 1:
+                  velocityX=0;
+                  velocityY=-VELOCITY;
+                  break;
+              case 2:
+                  velocityX=VELOCITY;
+                  velocityY=0;
+                  break;
+              case 3:
+                  velocityX=0;
+                  velocityY=VELOCITY;
+                  break;
+        
+              default:
+                  break;
+          }
+          enemy.body.setVelocityX(velocityX);
+          enemy.body.setVelocityY(velocityY);
+      });    
+    }
+
+
+  animateDirection(oldDirection, newDirection,prefix,obj){
+    if (oldDirection!=newDirection || prefix!=""){
+      //if (prefix!="")
+           //console.log(oldDirection + "->" + newDirection)
+
+    if (newDirection==2){
+        if (oldDirection==1)
+            obj.anims.play(prefix+'upright', true);
+        else
+            if (oldDirection==3)
+                obj.anims.play(prefix+'downright', true);
+            else
+                obj.anims.play(prefix+'right', true);
+    }
+    if (newDirection==0){
+        if (oldDirection==1)
+            obj.anims.play(prefix+'upleft', true);
+        else
+            if (oldDirection==3)
+                obj.anims.play(prefix+'downleft', true);
+            else
+            obj.anims.play(prefix+'left', true);
+    }
+    if (newDirection==1){
+        if (oldDirection==0)
+        obj.anims.play(prefix+'leftup', true);
+        else
+            if (oldDirection==2)
+            obj.anims.play(prefix+'rightup', true);
+            else
+            obj.anims.play(prefix+'up', true);
+    }
+    if (newDirection==3){
+        if (oldDirection==0)
+        obj.anims.play(prefix+'leftdown', true);
+        else
+            if (oldDirection==2)
+            obj.anims.play(prefix+'rightdown', false);
+            else
+            obj.anims.play(prefix+'down', true);
+    }
+}
+
+  }
+
+  update() {
+    if (otherPlayers.length>0){
+      otherPlayers.forEach(function(adversary){
+          this.animateDirection(adversary.direction, adversary.direction,adversary.adversary,adversary);
+    });
+
+    }
+    if (this.player) {
+      var emit=false;
+      var oldDirection=this.player.direction;
+      this.player.oldDirection=oldDirection;
+
+      // Horizontal movement
+      if (this.cursors.left.isDown) {
+        emit=true;
+        this.player.velocityX=-VELOCITY;
+        this.player.velocityY=0;
+        this.player.direction=0;
+        //this.player.body.setVelocityX(this.player.velocityX);
+      } else if (this.cursors.right.isDown) {
+        emit=true;
+        this.player.velocityX=VELOCITY;
+        this.player.velocityY=0;
+        this.player.direction=2;
+        //this.player.body.setVelocityX(this.player.velocityX);
+      } else if (this.cursors.up.isDown) {
+        emit=true;
+        this.player.velocityY=-VELOCITY;
+        this.player.velocityX=0;
+        this.player.direction=1;
+        //this.player.body.setVelocityY(this.player.velocityY);
+      } else if (this.cursors.down.isDown) {
+        emit=true;
+        this.player.velocityX=0;
+        this.player.velocityY=VELOCITY;
+        this.player.direction=3;
+        //this.player.body.setVelocityY(this.player.velocityY);
+      }
+
+      this.animateDirection(oldDirection, this.player.direction,"",this.player);
+//emit=true;
+      if (emit){
+      // emit player movement
+        socket.emit('playerMovement', 
+          { 
+            playerId:this.player.playerId,
+            x:this.player.x, 
+            y:this.player.y,
+            direction:this.player.direction,
+            velocityX:this.player.velocityX,
+            velocityY:this.player.velocityY
+         });
+      }
+    }
+  }
+}
+
+var zoom=0.5;
+var x=document.documentElement.clientWidth/zoom;
+var y=document.documentElement.clientHeight/zoom;
+
+var config = {
+  type: Phaser.CANVAS,
+  parent: 'content',
+  width: x,
+  height: y,
+  zoom: zoom,
+  pixelArt: true,
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: {
+        y: 0
+      },
+      debug: false // set to true to view zones
+    }
+  },
+  scene: [
+    BootScene,
+    WorldScene
+  ]
+};
+var game = new Phaser.Game(config);
+
+</script>

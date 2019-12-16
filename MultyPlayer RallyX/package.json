@@ -1,0 +1,27 @@
+{
+  "name": "MultiPlayerRallyX",
+  "version": "1.0.0",
+  "description": "Multi Player RallyX",
+  "main": "server.js",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/luisalvesmartins/mprally.git"
+  },
+  "author": {
+    "name": "Luis Alves Martins",
+    "email": "luisalvesmartins@gmail.com",
+    "url": "http://www.nxtthing.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/luisalvesmartins"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "hashmap": "^2.4.0",
+    "pug": "^2.0.4",
+    "socket.io": "^2.3.0"
+  }
+}

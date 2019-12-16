@@ -1,0 +1,89 @@
+doctype html
+head
+  meta(charset='UTF-8')
+  meta(name='viewport', content='width=device-width, initial-scale=1.0')
+  meta(http-equiv='X-UA-Compatible', content='ie=edge')
+  title Multiplayer Rally X
+  style.
+    @font-face {
+    font-family: 'PressStartK';
+    font-style: normal;
+    font-weight: 400;
+    src: local('PressStartK'), url(/public/font/PressStartK.woff) format('woff');
+    }
+    body {
+    color:lightgray;
+    margin:0;
+    background-color:#DF9847;
+    }
+    #container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height:100vh;
+    font-family: "PressStartK", Verdana, Geneva;
+    font-size:20px;
+    }
+    div {padding:10px;}
+    blink, .blink {
+      color:white;
+    -webkit-animation: blink 1s step-end infinite;
+    -moz-animation: blink 1s step-end infinite;
+    -o-animation: blink 1s step-end infinite;
+    animation: blink 1s step-end infinite;
+    }
+    @-webkit-keyframes blink {
+    67% { opacity: 0 }
+    }
+    @-moz-keyframes blink {
+    67% { opacity: 0 }
+    }
+    @-o-keyframes blink {
+    67% { opacity: 0 }
+    }
+    @keyframes blink {
+    67% { opacity: 0 }
+    }
+#container(onclick="window.location='game'", onkeyup="window.location='game'")
+  div(style='color:red;') MULTIPLAYER RALLY X
+  div
+  div
+  div INSTRUCTIONS
+  div
+  div USE THE ARROW KEYS TO 
+  div  
+    | DRIVE YOUR 
+    span(style='color:blue;') BLUE
+    |  CAR.
+  div
+  div
+    | BY DODGING 
+    span(style='color:red;') RED
+    |  AI CARS
+  div
+    | AND 
+    span(style='color:blue;') BLUE
+    |  HUMAN OPPONENTS
+  div
+    | COLLECT THE 
+    span(style='color:yellow;') YELLOW
+    |  FLAGS.
+  div
+  div
+  .blink CLICK TO START
+  div
+  div
+  div
+  div(style='font-size:10px') 2019 Luis Alves Martins
+  div(style='font-size:8px;color:black')
+    | this is a free adaptation of
+    br
+    | the NAMCO 1980 RallyX game
+script(async='', src='https://www.googletagmanager.com/gtag/js?id=UA-153647892-1')
+script.
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-153647892-1');

@@ -1,0 +1,23 @@
+doctype html
+
+html
+  head
+    title Multiplayer RallyX
+    style body {margin:0; overflow:hidden}
+  body
+    div(id='messages')
+    canvas(id='canvas' width='800px' height='600px')
+  script(src='/socket.io/socket.io.js')
+  script(src='/public/bower/jquery/dist/jquery.min.js')
+  script(src='/shared/Util.js')
+  script(src='/public/bower/howler.js/dist/howler.min.js')
+  script(src='/public/js/game/Drawing.js')
+  script(src='/public/js/game/Game.js')
+  script(src='/public/js/game/Input.js')
+  script(src='/public/js/client.js')
+  script(async='', src='https://www.googletagmanager.com/gtag/js?id=UA-153647892-1')
+script.
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-153647892-1');
