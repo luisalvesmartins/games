@@ -7,19 +7,32 @@
     <title>Document</title>
     <script src="js/TerrainDestruction.js"></script>
     <script src="js/phaser.min.js"></script>
-    <style>
-    body {
-        font-family: Arial, Helvetica, sans-serif;
-    }
+    <style type="text/css">
+        .container{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background-color:#000000;
+        }
+        body, html{
+            font-family: Arial, Helvetica, sans-serif;
+            margin:0;
+            height:100%;
+        }
     </style>
+
 </head>
 <body>
+    <div class=container>
+        <div id=divPhaser></div>
+    </div>    
 <script>
 var sizeExplosion=50;
 
 var config = {
     type: Phaser.AUTO,
-    parent: 'phaser-example',
+    parent: 'divPhaser',
     width: 800,
     height: 600,
     physics: {

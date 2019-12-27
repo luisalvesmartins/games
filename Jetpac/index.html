@@ -3,14 +3,25 @@
 <head> 
     <meta charset="UTF-8" />
     <title>Multiplayer Jetpac</title>
-    <script src="phaser.js"></script>
+    <script src="js/phaser.min.js"></script>
     <style type="text/css">
-        body {
-            margin: 0;
+        .container{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background-color:#000000;
+        }
+        body, html{
+            margin:0;
+            height:100%;
         }
     </style>
 </head>
 <body>
+    <div class=container>
+        <div id=divPhaser></div>
+    </div>
 
 <script type="text/javascript">
 String.prototype.paddingLeft = function (paddingValue) {
@@ -21,6 +32,7 @@ var config = {
     type: Phaser.AUTO,
     width: 8*32,
     height: 8*24, // notice the Spectrum size: 32x24
+    parent:'divPhaser',
     physics: {
         default: 'arcade',
         arcade: {
