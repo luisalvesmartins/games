@@ -181,47 +181,6 @@ var BadGuy={
 
 function create ()
 {
-    // var Bullet = new Phaser.Class({
-    //     Extends: Phaser.GameObjects.Image,
-
-    //     initialize: function Bullet (scene)
-    //     {
-    //         bullets = this.physics.add.group({ });
-    //         //Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet');
-    //         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet');
-    //         this.bullet=bullets.create(0,0,"bullet",0);
-    //         this.speed = Phaser.Math.GetSpeed(200, 1);
-    //     },
-
-    //     fire: function (x, y,lastDir)
-    //     {
-    //         this.direction=lastDir;
-    //         this.startX=x;
-    //         if (lastDir=="left")
-    //             this.setPosition(x-32, y-2 );
-    //         else
-    //             this.setPosition(x+10+22, y-2 );
-
-    //         this.setActive(true);
-    //         this.setVisible(true);
-    //     },
-
-    //     update: function (time, delta)
-    //     {
-    //         if (this.direction=="left")
-    //             this.x -= this.speed * delta;
-    //         else
-    //         this.x += this.speed * delta;
-
-    //         if (Math.abs(this.x-this.startX) > 200)
-    //         {
-    //             this.setActive(false);
-    //             this.setVisible(false);
-    //         }
-    //     }
-
-    // });
-
     bullets = this.physics.add.group({ });
     stars = this.physics.add.group({ });
     badGuys = this.physics.add.group({ });
@@ -469,15 +428,6 @@ function update (time, delta)
     }
 
     badGuys.children.iterate(function(badguy){
-        //console.log(badguy);
-        // if (badguy.x>30*8){
-        //     badguy.vx=-Math.abs(badguy.vx);
-        //     badguy.anims.play('badguy1l', true);
-        // }
-        // if (badguy.x<8){
-        //     badguy.vx=Math.abs(badguy.vx);
-        //     badguy.anims.play('badguy1r', true);
-        // }
         badguy.setVelocityX(badguy.vx);
     });
 
@@ -496,7 +446,6 @@ function update (time, delta)
         }
     })
 
-    //    if (cursors.up.isDown && player.body.touching.down)
     if (cursors.up.isDown )
     {
         player.setVelocityY(-100);
