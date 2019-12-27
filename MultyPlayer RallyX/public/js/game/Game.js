@@ -23,27 +23,7 @@ function Game(socket, drawing) {
   this.animationFrameId = 0;
   this.flags=[];
   this.opponents=[];
-
-
-  var config = {
-    audio: {
-        disableWebAudio: true
-    }
-  };
-
-  var g={
-    events:{
-      on:function(){},
-      once:function(){}
-    },
-    cache:{
-      json:{
-        "resources": [
-          "assets/sound/theme.mp3"]
-      }
-    }
-  }
-
+  
 }
 
 /**
@@ -56,11 +36,7 @@ function Game(socket, drawing) {
 Game.create = function(socket, canvasElement) {
   canvasElement.width = document.documentElement.clientWidth;
   canvasElement.height = document.documentElement.clientHeight;
-  // //MAKE IT SQUARE
-  // if (canvasElement.width>canvasElement.height)
-  //   canvasElement.width=canvasElement.height;
-  // else
-  //   canvasElement.height=canvasElement.width;
+
   var canvasContext = canvasElement.getContext('2d');
 
   var drawing = Drawing.create(canvasContext,1);
@@ -74,16 +50,16 @@ Game.create = function(socket, canvasElement) {
  */
 Game.prototype.init = function() {
   var context = this;
+
   this.socket.on('update', function(data) {
     context.receiveGameState(data);
   });
+
   this.socket.on('updateFlags', function(data) {
-    //console.log("FLAGS:")
     soundFlag.play();
     this.flags=data;
-    //console.log(this.flags)
-    //context.receiveGameState(data);
   }.bind(this));
+
   this.socket.on('updateMap', function(data,zoom,mPlayers) {
     this.zoom=zoom;
     console.log("mPlayers:" + mPlayers);
@@ -169,18 +145,18 @@ Game.prototype.update = function() {
  */
 Game.prototype.draw = function() {
   // Clear the canvas.
-var dx=0;
-var dy=0;
-dy=-this.selfPlayer.y+this.canvasHeightHalf;
-dx=-this.selfPlayer.x+this.canvasWidthHalf;
-if (dx>0)
-  dx=0;
-if (dx+this.canvasWidthDiff<0)
-  dx=-this.canvasWidthDiff;
-if (dy>0)
-  dy=0;
-if (dy+this.canvasHeightDiff<0)
-  dy=-this.canvasHeightDiff;
+  var dx=0;
+  var dy=0;
+  dy=-this.selfPlayer.y+this.canvasHeightHalf;
+  dx=-this.selfPlayer.x+this.canvasWidthHalf;
+  if (dx>0)
+    dx=0;
+  if (dx+this.canvasWidthDiff<0)
+    dx=-this.canvasWidthDiff;
+  if (dy>0)
+    dy=0;
+  if (dy+this.canvasHeightDiff<0)
+    dy=-this.canvasHeightDiff;
 
   if (this.selfPlayer.destroyed)
   {

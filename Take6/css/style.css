@@ -1,0 +1,63 @@
+body{
+    margin:0;
+}
+#divScoreTable>div{
+    display:flex;
+}
+#divScoreTable>div>div{
+    width:40px;
+    text-align: center;
+}
+#divScoreTable>div>span{
+    width:50px;
+    text-align:center;
+    font:25px verdana;
+}
+#divScoreTable img{
+    width:30px;
+    height:30px;
+}
+#newGameSel {
+    margin:12px;
+    display:flex;
+    flex-flow:row wrap;
+    justify-content:space-around;   
+}
+#divSelPlayers{
+    display:flex;width:400px;flex-wrap: wrap;align-content:space-between;
+}
+#divSelPlayers div{
+    height:120px;
+    width:120px;
+    display:flex;flex-flow:row wrap;
+    border:1px solid;justify-content: space-around;padding:2px;margin:2px;            
+}
+#scoreRegion
+{
+    position:absolute;
+    top:42px;
+    left:10px;
+    border:1px solid;
+}
+#gameBoard{
+    text-align:center
+}
+.header
+{
+    font-size:20px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    padding:40px;
+    border:blue 2px solid;
+    background-color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size:40px;
+    text-align: center;
+    display: none;
+}

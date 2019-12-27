@@ -43,9 +43,6 @@ Input.onTouchEnd = function (event) {
   Input.LEFT = false;
 }
 Input.onTouchMove = function (event) {
-  // console.log("onTouchMove");
-  // console.log(event);
-  // console.log(event.touches.length)
   if (this.lastTouchX!=null){
     var dx=event.touches[0].screenX-this.lastTouchX;
     var dy=event.touches[0].screenY-this.lastTouchY;

@@ -32,9 +32,6 @@ Sound.SOUND_SRCS = {
  */
 Sound.create = function() {
   return new Sound(Sound.SOUND_SRCS);
-  return new Sound(Sound.SOUND_SRCS.map((src) => {
-    return new Howl({ src: Sound.BASE_URL + src });
-  }));
 };
 
 /**

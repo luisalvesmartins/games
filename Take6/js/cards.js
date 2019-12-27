@@ -9,7 +9,6 @@ var Graphics={
     width:0,
     height:0,
     init:function(canvasName){
-        this.canvasName=canvasName;
         var c=document.getElementById(canvasName);
         this.ctx=c.getContext("2d");
         this.width=c.clientWidth;
@@ -165,7 +164,7 @@ var Graphics={
             if (game.queue.length>0)
             {
                 var action=game.queue.splice(0,1);
-                console.log(action)
+                //console.log(action)
                 executeFunctionByName(action[0],window);
             }
         }
@@ -185,7 +184,7 @@ var Graphics={
     drawScoreboard:function(){
         var s="";
         for(let i=1;i<game.nPlayers+1;i++){
-            s+="<div id=divPlayer" + i + "><div><img src='player" + i + ".png'></div><span>" + game.scores[i-1] + "</span></div>"
+            s+="<div id=divPlayer" + i + "><div><img src='assets/player" + i + ".png'></div><span>" + game.scores[i-1] + "</span></div>"
         }
         document.all("divScoreTable").innerHTML=s;
     }
@@ -301,9 +300,9 @@ var game={
         if (this.currentPlayer>=this.nPlayers)
             this.currentPlayer=0;
         Graphics.drawCurrentPlayer();
+        var possibleMoves=game.possibleMovesHand(this.currentPlayer);
         if (this.currentPlayer!=0){
             //MAGIC PLAY
-            var possibleMoves=game.possibleMovesHand(this.currentPlayer);
             for(let i=0;i<possibleMoves.length;i++)
             {
                 if (possibleMoves[i]==null)
@@ -356,8 +355,8 @@ var game={
                         }
                     }
             
-                    console.log("SCORES:")
-                    console.log(bestRowToPlay)
+                    // console.log("SCORES:")
+                    // console.log(bestRowToPlay)
                     var playThis=null;
                     for(let i=0;i<possibleMoves.length;i++)
                     {
@@ -379,8 +378,8 @@ var game={
                         }    
                     }
 
-                    console.log(playThis)
-                    console.log(game.hands[this.currentPlayer][playThis]);
+                    // console.log(playThis)
+                    // console.log(game.hands[this.currentPlayer][playThis]);
                     userInteraction.lastCard=playThis;
                     userInteraction.moveToCollect(bestRowToPlay);
 
@@ -389,9 +388,9 @@ var game={
                 else
                 {
                     var row=possibleMoves[0].row;
-                    console.log("play:" + row)
-                    console.log("card:" + possibleMoves[0].i)
-                    console.log("CARD:" + game.hands[this.currentPlayer][possibleMoves[0].i])
+                    // console.log("play:" + row)
+                    // console.log("card:" + possibleMoves[0].i)
+                    // console.log("CARD:" + game.hands[this.currentPlayer][possibleMoves[0].i])
                     //joga de i para row 
                     var col=game.board[row].length;
     
@@ -413,7 +412,31 @@ var game={
                 }
             }
         }
+        else
+        {
+            if (possibleMoves.length==0)
+            {
+                //CHECK WINNER
+                var min=game.scores[0];
+                for(let i=0;i<game.nPlayers;i++){
+                    min=Math.min(min,game.scores[i]);
+                    document.all("divPlayer" + (i+1)).style.backgroundColor="white";
+                }
+                //HIGHLIGHT WINNERS
+                for(let i=0;i<game.nPlayers;i++){
+                    if (game.scores[i]==min){
+                        document.all("divPlayer" + (i+1)).style.backgroundColor="lightgreen";
+                    }
+                }
+                //SHOW BUTTON TO RESTART
+                document.all("divWinner").style.display="block";
+            }
+        }
     }
+}
+
+window.onload=function(){
+    Menu.selectPlayers();
 }
 
 var step=3;
@@ -446,15 +469,31 @@ function move(obj,step){
     }
     return moved;
 }
+function getScrollXY() {
+    var scrOfX = 0, scrOfY = 0;
+    if( typeof( window.pageYOffset ) == 'number' ) {
+      //Netscape compliant
+      scrOfY = window.pageYOffset;
+      scrOfX = window.pageXOffset;
+    } else if( document.body && ( document.body.scrollLeft || document.body.scrollTop ) ) {
+      //DOM compliant
+      scrOfY = document.body.scrollTop;
+      scrOfX = document.body.scrollLeft;
+    } else if( document.documentElement && ( document.documentElement.scrollLeft || document.documentElement.scrollTop ) ) {
+      //IE6 standards compliant mode
+      scrOfY = document.documentElement.scrollTop;
+      scrOfX = document.documentElement.scrollLeft;
+    }
+    return [ scrOfX, scrOfY ];
+}
 
 var userInteraction={
     lastCard:null,
     lastPossible:null,
     mouseUp(ev){
-        const xy = document.all(Graphics.canvasName).getBoundingClientRect();
-        var found=userInteraction.findClickedObject(ev.clientX-xy.left,ev.clientY-xy.top);
-
-        console.log(found)
+        var xy=getScrollXY();
+        var cr=document.all("myCanvas").getBoundingClientRect();
+        var found=userInteraction.findClickedObject(ev.clientX+xy[0]-cr.left,ev.clientY+xy[1]-cr.top);
         if (found!=null)
         {
             //SELECT CARD
@@ -465,7 +504,7 @@ var userInteraction={
                     //click na mesma carta deve mandar para o único green
                     if (userInteraction.lastPossible!=null)
                     {
-                        console.log("MOVE TO " + userInteraction.lastPossible)
+                        //console.log("MOVE TO " + userInteraction.lastPossible)
                         userInteraction.moveTo(userInteraction.lastPossible);
                     }
                 }
@@ -624,11 +663,13 @@ var userInteraction={
 
 var Menu={
     play(nPlayers){
-        document.all("divSelPlayers").style.display="none";
+        document.all("newGameSel").style.display="none";
+        document.all("gameBoard").style.display="block";
+        document.all("scoreRegion").style.left=document.all("myCanvas").getBoundingClientRect().left + "px";
 
-        document.all("myCanvas").style.display="block";
         Graphics.init("myCanvas");
 
+        //document.all("myCanvas").addEventListener("mouseup", userInteraction.mouseUp);
         document.all("myCanvas").addEventListener("click", userInteraction.mouseUp);
         
         game.init(nPlayers);
@@ -655,9 +696,9 @@ var Menu={
         for(let j=1;j<nPlayers;j++)
             for(let i=0;i<game.hands[j].length;i++)
             {
-                game.hands[j][i].toX=-CardWidth;
+                game.hands[j][i].toX=-CardWidth*2;
                 game.hands[j][i].toY=0;
-                game.hands[j][i].x=-CardWidth;
+                game.hands[j][i].x=-CardWidth*2;
                 game.hands[j][i].y=0;
             }
         //BOARD
@@ -694,14 +735,15 @@ var Menu={
         var sT="";
         var size=30;
         for(let i=2;i<=10;i++){
-            var s="<div onclick='Menu.play(" + i + ")' style='cursor:pointer;'>";
+            var s="<div onclick='Menu.play(" + i + ")'>";
             size=30+(10-i)*2.5;
             for(let j=1;j<=i;j++){
-                s+="<img style='width:" + size + "px;height:" + size + "px;' src='player" + j + ".png'>";
+                s+="<img style='width:" + size + "px;height:" + size + "px' src='assets/player" + j + ".png'>";
             }
             s+="</div>"
             sT+=s;
         }
         document.all("divSelPlayers").innerHTML=sT;
+        document.all("newGameSel").style.display="flex";
     }    
 }
