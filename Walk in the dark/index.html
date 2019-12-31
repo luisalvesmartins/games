@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="visibility_polygon.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser-arcade-physics.min.js"></script>
+</head>
+<body>
+
+    <script>
+var config = {
+    width: 800,
+    height: 600,
+    type: Phaser.AUTO,
+    parent: 'phaser-example',
+    physics:{
+        default:'arcade',
+        arcade: {
+                gravity: { y: 300 },
+                debug: false
+        }
+    },
+    scene: {
+        preload:preload,
+        create: create,
+        update: update
+    }
+};
+
+var game = new Phaser.Game(config);
+var polygon;
+var graphics;
+var a = 0;
+
+var segments;
+var polygons = [];
+
+function preload(){
+    this.load.image('wall', 'Assets/wall.png');
+    this.load.image('wall1w1', 'Assets/wall1w1.png');
+    this.load.image('wall1w1s', 'Assets/wall1w1s.png');
+    this.load.image('wall1w2', 'Assets/wall1w2.png');
+    this.load.image('wall1w12', 'Assets/wall1w12.png');
+    this.load.image('wall2', 'Assets/wall2.png');
+    this.load.image('wall2s', 'Assets/wall2s.png');
+
+    this.load.image('ground1', 'Assets/ground1.png');
+
+    this.load.image('player', 'Assets/player.png');
+
+}
+
+function createBox(x,y,w,h){
+    polygons.push([[x,y],[x+w,y],[x+w,y+h],[x,y+h]]);    
+}
+
+var gameScene;
+//var player;
+
+function addWall(x,y,size){
+    var hw1=60;
+    var hw12=59;
+    switch (size) {
+        case "g1":
+            x+=hw1;
+            gameScene.add.sprite(x,y,'ground1');
+            x+=hw12;
+            break;
+        case "1":
+            x+=hw1;
+            gameScene.add.sprite(x,y,'wall');
+            x+=hw12;
+            break;
+        case "1w1":
+            x+=hw1;
+            gameScene.add.sprite(x,y,'wall1w1');
+            x+=hw12;
+            break;
+        case "1w1s":
+            x+=hw1;
+            gameScene.add.sprite(x,y,'wall1w1s');
+            createBox(x-60,y+72,66,10);
+            x+=hw12;
+            break;
+        case "1w2":
+            x+=hw1;
+            gameScene.add.sprite(x,y,'wall1w2');
+            x+=hw12;
+            break;
+        case "1w12":
+            x+=hw1;
+            gameScene.add.sprite(x,y,'wall1w12');
+            x+=hw12;
+            break;
+        case "2":
+            x+=119;
+            gameScene.add.sprite(x,y,'wall2');
+            x+=119;
+            break;      
+        case "2s":
+            x+=119;
+            gameScene.add.sprite(x,y,'wall2s');
+            createBox(x+1-119,y+72,236,10);
+            x+=119;
+            break;      
+        default:
+            break;
+    }
+    return x;
+}
+
+function create ()
+{
+    gameScene=this;
+
+    var ox=119/2;
+    var ox1=238/2;
+    var x=0;
+    var y=-84;
+
+    var Wall=[
+        ["1","2s","1","1w1s","1w1s","1"],
+        ["1","1w1","1w1s","1","2s","1"],
+        ["1","2","1","2s","1"],
+        ["g1","g1","g1","g1","g1","g1","g1"]
+    ]
+
+    var Wall=[
+        ["1","1w1","1w1s","1","2s","1",     "1w1s","1w1s","1w1s","1w1s","2"],
+        ["1","2s","1","1w1s","1w1s","1",    "1w1","1w1","1w1","1w1","1","1w1"],
+        ["1","1w1","1w1s","1","2s","1",     "1w1s","1w1s","1w1s","1w1s","1w1","1w1s"],
+        ["1","2","1","2s","1",              "2","2","2"],
+        ["g1","g1","g1","g1","g1","g1","g1","g1","g1","g1","g1","g1","g1"]
+    ]
+
+    for(let index=0;index<Wall.length;index++){
+        x=0;
+        if (Wall[index][0]!="g1")
+            y+=84*2;
+        else
+            y+=84+59;
+        for(let xx=0;xx<Wall[index].length;xx++){
+            x=addWall(x,y,Wall[index][xx]);
+        }
+    }
+
+    graphics = this.add.graphics({ lineStyle: { width: 2, color: 0xaa6622 } });
+
+    segments = VisibilityPolygon.convertToSegments(polygons);
+    segments = VisibilityPolygon.breakIntersections(segments);
+
+    this.player = this.physics.add.sprite(50,500,"player");
+    this.player.velocityX=0;
+    this.player.velocityY=0;
+
+    this.cursors = this.input.keyboard.createCursorKeys();
+
+}
+
+var world={
+  width:1600,
+  height:800
+}
+
+
+var x=20;
+var y=60;
+var dx=1;
+var dy=0;
+
+var x1=160;
+var y1=260;
+var dx1=-2;
+var dy1=2;
+const VELOCITY=200;
+function update ()
+{
+    this.player.velocityX=0;
+    this.player.velocityY=0;
+      // Horizontal movement
+      if (this.cursors.left.isDown) {
+        this.player.velocityX=-VELOCITY;
+        this.player.velocityY=0;
+        this.player.direction=0;
+        //this.player.body.setVelocityX(this.player.velocityX);
+      } else if (this.cursors.right.isDown) {
+        this.player.velocityX=VELOCITY;
+        this.player.velocityY=0;
+        this.player.direction=2;
+        //this.player.body.setVelocityX(this.player.velocityX);
+      } else if (this.cursors.up.isDown) {
+        this.player.velocityY=-VELOCITY;
+        //this.player.velocityX=0;
+        this.player.direction=1;
+        this.player.setVelocityY(this.player.velocityY);
+        //this.player.body.setVelocityY(this.player.velocityY);
+      } else if (this.cursors.down.isDown) {
+        this.player.velocityX=0;
+        this.player.velocityY=VELOCITY;
+        this.player.direction=3;
+        //this.player.body.setVelocityY(this.player.velocityY);
+      }
+      this.player.setVelocityX(this.player.velocityX);
+
+    if (this.player.x<0)
+        this.player.x=0;
+    if (this.player.y>world.height)
+        this.player.y=world.height;
+    if (this.player.x>world.width)
+        this.player.x=world.width;
+      //this.player.setVelocityX(this.player.velocityX);
+
+
+    this.input.on('pointerup', function (pointer) {
+                x=pointer.x;
+                y=pointer.y;
+    });
+    x+=dx;
+    y+=dy;
+    if (x>world.width-10 || x<10)
+        dx=-dx;
+    if (y>world.height-10 || y<10)
+        dy=-dy;
+
+    x1+=dx1;
+    //y1+=dy1;
+    if (x1>world.width-10 || x1<10)
+        dx1=-dx1;
+    if (y1>world.height-10 || y1<10)
+        dy1=-dy1;
+
+
+    var position=[x,y]
+    graphics.clear();
+
+    polygons.forEach(el=>{
+        var p=[];
+        el.forEach(no=>{
+            p[p.length]=no[0];
+            p[p.length]=no[1];
+        })
+
+        polygon = new Phaser.Geom.Polygon(p);
+        graphics.strokePoints(polygon.points, true);
+
+    })
+
+//BACKGROUND
+    polygon = new Phaser.Geom.Polygon([ [0,0],[world.width,0],[world.width,world.height],[0,world.height] ]);
+    graphics.fillStyle(0x000000,.4);
+    graphics.fillPoints(polygon.points, true);
+
+
+    var visibility = VisibilityPolygon.computeViewport(position, segments, [0, 0], [world.width,world.height]);
+    polygon = new Phaser.Geom.Polygon(visibility);
+    graphics.fillStyle(0xffffff, .2);   // color: 0xRRGGBB
+    graphics.fillPoints(polygon.points, true);
+
+    // var visibility2 = VisibilityPolygon.computeViewport([x1,y1], segments, [0, 0], [world.width,world.height]);
+    // polygon = new Phaser.Geom.Polygon(visibility2);
+    // graphics.fillStyle(0xffffff, .2);   // color: 0xRRGGBB
+    // graphics.fillPoints(polygon.points, true);
+
+
+    graphics.fillStyle(0xaaaa00);
+    graphics.fillCircle(x, y, 8);
+
+    if(Phaser.Geom.Polygon.Contains(polygon, x1, y1))
+    {
+        graphics.fillStyle(0xaa0000);
+    }
+    else
+    {
+        graphics.fillStyle(0x0000aa);
+    }
+
+    graphics.fillCircle(x1, y1, 8);
+    this.cameras.main.setBounds(0, 0, world.width, world.height);
+    this.cameras.main.startFollow(this.player);
+    this.cameras.main.roundPixels = true; // avoid tile bleed
+}
+
+    </script>
+
+</body>
+</html>
