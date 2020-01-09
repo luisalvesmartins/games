@@ -181,13 +181,6 @@ class playGame extends Phaser.Scene{
         });
         this.baddieNumber=0;
         // this.addBaddie(this.game.config.width,1,1);
-        // this.addBaddie(this.game.config.width,2,2);
-        // this.addBaddie(this.game.config.width,3,3);
-        // this.addBaddie(this.game.config.width,4,4);
-        // this.addBaddie(this.game.config.width,5,5);
-        // this.addBaddie(this.game.config.width,6,6);
-        // this.addBaddie(this.game.config.width,7,7);
-
 
         this.physics.add.collider(this.player, platforms);
         this.physics.add.collider(this.baddies, platforms);
