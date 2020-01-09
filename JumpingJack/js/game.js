@@ -63,7 +63,6 @@ class playGame extends Phaser.Scene{
         this.score= 0;
         this.lives=3;
         this.liv=[];
-
         //#region anims
         this.anims.create({
             key: 'baddie1',
@@ -180,13 +179,14 @@ class playGame extends Phaser.Scene{
             defaultKey: 'baddies',
             defaultFrame:1
         });
-        this.addBaddie(this.game.config.width,1,1);
-        this.addBaddie(this.game.config.width,2,2);
-        this.addBaddie(this.game.config.width,3,3);
-        this.addBaddie(this.game.config.width,4,4);
-        this.addBaddie(this.game.config.width,5,5);
-        this.addBaddie(this.game.config.width,6,6);
-        this.addBaddie(this.game.config.width,7,7);
+        this.baddieNumber=0;
+        // this.addBaddie(this.game.config.width,1,1);
+        // this.addBaddie(this.game.config.width,2,2);
+        // this.addBaddie(this.game.config.width,3,3);
+        // this.addBaddie(this.game.config.width,4,4);
+        // this.addBaddie(this.game.config.width,5,5);
+        // this.addBaddie(this.game.config.width,6,6);
+        // this.addBaddie(this.game.config.width,7,7);
 
 
         this.physics.add.collider(this.player, platforms);
@@ -200,19 +200,28 @@ class playGame extends Phaser.Scene{
     }
     displayHiScore(){
         var ss=this.savedData.score.toString().paddingLeft("00000");
-        var sy=24*7+12;
-        var x=19*8;
-        this.add.image(x-2*8, sy, 'font',45, true,true ).setTint(0xff00dc);
-        this.add.image(x-1*8, sy, 'font',46, true,true ).setTint(0xff00dc);
-        for(let i=0;i<ss.length;i++){
-            this.add.image(x+i*8, sy, 'font',92-16*4+(ss[i]*1), true,true ).setTint(0xff00dc);
-        }        
+        if (!this.hiScoreChar){
+            var sy=24*7+12;
+            var x=19*8;
+            this.add.image(x-2*8, sy, 'font',45, true,true ).setTint(0xff00dc);
+            this.add.image(x-1*8, sy, 'font',46, true,true ).setTint(0xff00dc);
+            this.hiScoreChar=[];
+            for(let i=0;i<ss.length;i++){
+                this.hiScoreChar[i]=this.add.image(x+i*8, sy, 'font',92-16*4+(ss[i]*1), true,true ).setTint(0xff00dc);
+            }        
+        }
+        else
+        {
+            for(let i=0;i<ss.length;i++){
+                this.hiScoreChar[i].setFrame(92-16*4+(ss[i]*1));
+            }
+        }
     }
     displayScore(){
+        var ss=this.score.toString().paddingLeft("00000");
         if (!this.scoreChar){
             var sy=24*7+12;
             var x=27*8;
-            var ss=this.score.toString().paddingLeft("00000");
             this.add.image(x-2*8, sy, 'font',56, true,true ).setTint(0xff00dc);
             this.add.image(x-1*8, sy, 'font',40, true,true ).setTint(0xff00dc);
             this.scoreChar=[];
@@ -222,14 +231,14 @@ class playGame extends Phaser.Scene{
         }
         else
         {
-            var ss=this.score.toString().paddingLeft("00000");
             for(let i=0;i<ss.length;i++){
                 this.scoreChar[i].setFrame(92-16*4+(ss[i]*1));
             }
         }
-    }
-    updateScore(){
-        this.scoreText.text = "Score: " + this.score.toString();
+        if (this.score>this.savedData.score){
+            this.savedData.score=this.score;
+            this.displayHiScore();
+        }
     }
     PlayerKO(){
         if (!this.player.isko){
@@ -247,7 +256,6 @@ class playGame extends Phaser.Scene{
         gameScene.PlayerKO();
     }
     fallDown(player,hole){
-        console.log("HIT")
         if (Math.abs(player.x-hole.x)<=13)
         {
             if (player.moveup){
@@ -256,12 +264,19 @@ class playGame extends Phaser.Scene{
                     player.moveupok=true;
                     gameScene.score+=50;
                     gameScene.displayScore();
+                    if (player.y<16)
+                    {
+                        //add baddie
+                        gameScene.baddieNumber++;
+                        if (gameScene.baddieNumber>7)
+                        gameScene.baddieNumber=1;
+                        gameScene.addBaddie(gameScene.game.config.width,1,gameScene.baddieNumber);
+                    }
                 }
             }
             else
             {
                 player.y+=6;
-                console.log("FALL")
                 gameScene.PlayerKO();
             }
         }
@@ -299,9 +314,30 @@ class playGame extends Phaser.Scene{
                 this.liv[i]=this.add.image(4+i*8,24*7+12,"lives");
             }
         }
+        if (this.lives==0){
+            localStorage.setItem("jjack",JSON.stringify({
+                score: this.savedData.score
+              }));
+              this.add.text(game.config.width / 2-50, game.config.height / 2, "GAME OVER", {
+                font: "bold 16px Arial",
+                align: "center",
+                fill: "#000000",
+                stroke: "#ff0000",
+                strokeThickness: 0
+                });
+            let timedEvent =  this.time.addEvent({
+                delay: 7000,
+                callbackScope: this,
+                callback: function(){
+                    this.scene.start("PlayGame");
+                }
+            });
+    
+        }
     }
     PlayerLostLife(){
         this.lives--;
+        this.cameras.main.shake(500);
         this.displayLives();
     }
     update(){
