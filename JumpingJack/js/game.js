@@ -246,12 +246,13 @@ class playGame extends Phaser.Scene{
             this.player.moveup=false;
             this.player.countMove=4*30;
             this.player.anims.play("playerko",true);
-            if (this.player.y>24*7)
-            {
-                this.PlayerLostLife()
-            }
         }
-    }
+        if (this.player.y>24*7 && !this.player.killcounted)
+        {
+            this.player.killcounted=true;
+            this.PlayerLostLife()
+        }
+}
     ohdear(player,baddie){
         gameScene.PlayerKO();
     }
@@ -456,6 +457,10 @@ class playGame extends Phaser.Scene{
                 this.player.countMove=0;
         }
         if (this.player.countMove==0){
+            if (this.player.isko==true)
+            {
+                this.player.killcounted=false;
+            }
             this.player.isko=false;
             this.player.countMove=-1;
             this.moveright=false;
