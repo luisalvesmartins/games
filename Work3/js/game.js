@@ -26,6 +26,7 @@ String.prototype.paddingLeft = function (paddingValue) {
          this.explodeStarted=false;
          this.angleDir=1;
          this.angle=0;
+         this.scene=scene;
      }
  
      unload(){
@@ -91,6 +92,13 @@ String.prototype.paddingLeft = function (paddingValue) {
              this.angle+=this.angleDir;
  //AQUI -> CONTADOR
              this.box.angle=this.angle;
+
+             if (this.explodeCounter>300){
+                 //LOSE LIFE
+                 updateLives(-1);
+                 returnOrder="exploded";
+                 this.explodeCounter=0;
+             }
          }
          else{
              this.box.angle=0;
@@ -288,6 +296,7 @@ String.prototype.paddingLeft = function (paddingValue) {
  var rect1,rect2,rect3,rect4;
  function create ()
  {
+     curGame=this;
      //#region anims
      this.anims.create({
          key: 'lives',
@@ -496,7 +505,6 @@ String.prototype.paddingLeft = function (paddingValue) {
          this.livespr[i]=this.add.sprite(16+i*18+8,16+16+4,"lives",0);
          this.livespr[i].anims.play("lives",true,i);
      }
-     //updateLives(this);
  
      //SCORE
      this.score=0;
@@ -507,18 +515,25 @@ String.prototype.paddingLeft = function (paddingValue) {
              offsetY: 1, color: '#000', fill:true
              }
      });
-     //updateScore(this)
  }
  
- function updateScore(game){
-     game.txtScore.setText(game.score.toString().paddingLeft("000000"));
+ function updateScore(){
+    curGame.txtScore.setText(curGame.score.toString().paddingLeft("000000"));
  }
  
- function updateLives(game){
+ function updateLives(dir){
+     if (dir==-1){
+        curGame.cameras.main.shake(500);
+        curGame.lives--;
+        if (curGame.lives==0)
+            gameOver=true;
+     }
      for(var i=0;i<3;i++)
      {
-         if (i>=game.lives)
-             game.livespr[i].setFrame(1);
+         if (i>=curGame.lives){
+            curGame.livespr[i].anims.stop();
+            curGame.livespr[i].setFrame(1);
+         }
      }
  }
  
@@ -532,12 +547,13 @@ String.prototype.paddingLeft = function (paddingValue) {
  
  var lastDir="left";
  var nBoxes=0;
+ var gameOver=false;
  function update (time, delta)
  {
-     // if (gameOver)
-     // {
-     //     return;
-     // }
+     if (gameOver)
+     {
+         return;
+     }
      //this.input.enabled=true;
  
  //#region PLAYER MOVE
@@ -596,8 +612,12 @@ String.prototype.paddingLeft = function (paddingValue) {
      };
      truck2.update();
  //#endregion    
- 
-     Boxes.forEach(box=>{
+
+     let index=0;
+     while (index<Boxes.length)
+     {
+        box=Boxes[index];
+    //  Boxes.forEach(box=>{
  
          if (box.grabbed)
          {
@@ -611,7 +631,7 @@ String.prototype.paddingLeft = function (paddingValue) {
                      dropPointsR.forEach(gP=>{
                          if (Math.abs(gP-playerl.y)<2){
                              this.score+=10;
-                             updateScore(this);
+                             updateScore();
                              box.grabbed=false;
                              box.x=playerl.x+SIZE;
                              box.y=gP;
@@ -630,7 +650,7 @@ String.prototype.paddingLeft = function (paddingValue) {
                      dropPointsL.forEach(gP=>{
                          if (Math.abs(gP-playerr.y)<2){
                              this.score+=15;
-                             updateScore(this);
+                             updateScore();
  
                              box.grabbed=false;
                              //CHECK TOP EXIT
@@ -650,29 +670,38 @@ String.prototype.paddingLeft = function (paddingValue) {
  
          }
  
-         box.update();
- 
-         //GRAB BOX LEFT
-         if (box.available && Math.abs(box.y-playerl.y)<5 && Math.abs(playerl.x-box.x)<34){
-             grabPointsR.forEach(gP=>{
-                 if (Math.abs(gP-playerl.y)<2){
-                     box.grabbed=true;
-                     box.grabbedBy="L";
-                     playerl.grabbing=true;
-                 }
-             })
+         if (box.update()=="exploded")
+         {
+             box.box.destroy();
+             Boxes.splice(index,1);
          }
-         //GRAB BOX RIGHT
-         if (box.available && Math.abs(box.y-playerr.y)<5 && Math.abs(playerr.x-box.x)<34){
-             grabPointsL.forEach(gP=>{
-                 if (Math.abs(gP-playerr.y)<2){
-                     box.grabbed=true;
-                     box.grabbedBy="R";
-                     playerr.grabbing=true;
-                 }
-             })
+         else
+         {
+            //GRAB BOX LEFT
+            if (box.available && Math.abs(box.y-playerl.y)<5 && Math.abs(playerl.x-box.x)<34){
+                grabPointsR.forEach(gP=>{
+                    if (Math.abs(gP-playerl.y)<2){
+                        box.grabbed=true;
+                        box.grabbedBy="L";
+                        playerl.grabbing=true;
+                    }
+                })
+            }
+            //GRAB BOX RIGHT
+            if (box.available && Math.abs(box.y-playerr.y)<5 && Math.abs(playerr.x-box.x)<34){
+                grabPointsL.forEach(gP=>{
+                    if (Math.abs(gP-playerr.y)<2){
+                        box.grabbed=true;
+                        box.grabbedBy="R";
+                        playerr.grabbing=true;
+                    }
+                })
+            }
+            index++;
+
          }
-     })
+
+     }
  
      //check proximity
  
