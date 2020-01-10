@@ -5,23 +5,14 @@
     <title></title>
     <script src="js/phaser.min.js"></script>
     <style type="text/css">
-    .container{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        background-color:#9A634A;
-    }
     body, html{
+        background-color:#9A634A;
         margin:0;
-        height:100%;
     }
     </style>
 </head>
 <body>
-<div class=container>
     <div id=ph></div>
-</div>
 <script type="text/javascript">
 String.prototype.paddingLeft = function (paddingValue) {
    return String(paddingValue + this).slice(-paddingValue.length);
@@ -269,10 +260,15 @@ var Boxes=[];
 var plat;
 
 var config = {
-    parent:'ph',
     type: Phaser.AUTO,
-    width: SIZE*25,
-    height: SIZE*15,
+    scale: 
+    {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        parent: "ph",
+        width: SIZE*25,
+        height: SIZE*15,
+    },
     physics: {
         default: 'arcade',
         arcade: {
@@ -284,8 +280,7 @@ var config = {
         preload: preload,
         create: create,
         update: update
-    },
-    zoom:1
+    }
 };
 
 var game = new Phaser.Game(config);
@@ -310,7 +305,7 @@ function preload ()
     // animplayerlwait=[0,1,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,4,4,3,0,0,0,0,0,0,0,0];
     // animplayerrwait=[0,1,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,4,4,3,0,0,0,0,0,0,0,0];
 }
-
+var rect1,rect2,rect3,rect4;
 function create ()
 {
     //#region anims
@@ -486,11 +481,29 @@ function create ()
 
     // //  Input Events
     cursors = this.input.keyboard.createCursorKeys();
-    spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-
     upKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
     downKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     //#endregion
+
+    var w=32*3;
+    var h=32*3;
+
+    var graphics = this.add.graphics();
+    graphics.fillStyle(0x000000, 0.3)
+    rect1 = new Phaser.Geom.Rectangle(0, 32*4, w, h);
+    graphics.fillRectShape(rect1);
+
+    rect2 = new Phaser.Geom.Rectangle(0, 32*8, w, h ,0xff6699);
+    graphics.fillRectShape(rect2);
+
+    rect3 = new Phaser.Geom.Rectangle(32*22, 32*4, w, h ,0xff6699);
+    graphics.fillRectShape(rect3);
+    rect4 = new Phaser.Geom.Rectangle(32*22, 32*8, w, h ,0xff6699);
+    graphics.fillRectShape(rect4);
+
+    // rect3 = this.add.rectangle(w/2+32*22, 32*4+h/2, w, h, 0xff6699);
+    // rect4 = this.add.rectangle(w/2+32*22, 32*8+h/2, w, h ,0xff6699);
+
 }
 
 function getCell(child,dirX,dirY,roundX,roundY){
@@ -516,22 +529,18 @@ function update (time, delta)
     var dir2="";
     var pointer = this.input.activePointer;
     if (pointer.isDown) {
-        var touchX = pointer.x;
-        var touchY = pointer.y;
-        if (touchX>config.width/2)  //player 2
-        {
-            if (touchY<config.height/2)
-                dir2="up";
-            else
-                dir2="down";
-        }
-        else  //player 1
-        {
-            if (touchY<config.height/2)
-                dir="up";
-            else
-                dir="down";
-        }
+        var isInside = rect1.contains(pointer.x, pointer.y);
+        if (isInside)
+            dir="up";
+        isInside = rect2.contains(pointer.x, pointer.y);
+        if (isInside)
+            dir="down";
+        isInside = rect3.contains(pointer.x, pointer.y);
+        if (isInside)
+            dir2="up";
+        isInside = rect4.contains(pointer.x, pointer.y);
+        if (isInside)
+            dir2="down";
     }
 
     if (cursors.up.isDown){
