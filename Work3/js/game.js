@@ -17,7 +17,10 @@ String.prototype.paddingLeft = function (paddingValue) {
         {
             emitter1.setPosition(this.x,this.y)
             emitter1.explode();
+            return true;
         }
+        else
+            return false;
     }
  }
  
@@ -111,6 +114,13 @@ String.prototype.paddingLeft = function (paddingValue) {
             if (l<0)
                 l=0;
             this.load=Math.floor(l);
+            if (this.x<360 && this.load/2!=Math.floor(this.load/2))
+                this.load--;
+            else
+                if (this.x>360 && this.load/2==Math.floor(this.load/2))
+                    this.load--;
+            
+
             this.box.anims.play('box' + this.load, true);
         }
         else
