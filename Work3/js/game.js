@@ -7,107 +7,131 @@ String.prototype.paddingLeft = function (paddingValue) {
  const HALFSIZE=SIZE/2;
  
  var Machine=class{
-     constructor(scene,x,y){
-         this.machine=scene.physics.add.sprite(x,y,'machine',0);
-     }
+    constructor(scene,x,y){
+        this.machine=scene.physics.add.sprite(x,y,'machine',0);
+    }
  }
  
  var Box= class{
-     constructor(scene,x,y,num)
-     {
-         this.id=num;
-         this.x=x;
-         this.y=y;
-         this.box = scene.physics.add.sprite(x, y, 'ground',2);
-         this.unloading=false;
-         this.available=false;
-         this.load=0;
-         this.explodeCounter=0;
-         this.explodeStarted=false;
-         this.angleDir=1;
-         this.angle=0;
-         this.scene=scene;
-     }
+    constructor(scene,x,y,num)
+    {
+        this.id=num;
+        this.x=x;
+        this.y=y;
+        this.box = scene.physics.add.sprite(x, y, 'ground',2);
+        this.unloading=false;
+        this.available=false;
+        this.load=0;
+        this.explodeCounter=0;
+        this.explodeStarted=false;
+        this.angleDir=1;
+        this.angle=0;
+        this.scene=scene;
+        this.loading=false;
+    }
  
-     unload(){
-         this.unloading=true;
-         this.vx=1;
-         this.vy=0;
-     }
- 
-     update()
-     {
-         var returnOrder="";
-         if (this.unloading){
-             this.x+=this.vx;
-             this.y+=this.vy;
-             if (this.x>SIZE*2+HALFSIZE){
-                 this.x=SIZE*2+HALFSIZE;
-                 this.vx=0;
-                 this.vy=1;
-             }
-             if (this.y>SIZE*13+HALFSIZE)
-             {
-                 this.y=SIZE*13+HALFSIZE;
-                 this.vy=0;
-                 this.unloading=false;
-                 this.available=true;
-                 this.explodeStarted=true;
-                 returnOrder="offloaded";
-             }
-         };
- 
-         if (!this.grabbed){
-             this.explodeStarted=true;
-             var cell=getCell(this,0,1,-8,0);
-             if (cell=="R")
-             {
-                 this.x++;
-                 this.explodeStarted=false;
-             }
-             else
-             {
-                 cell=getCell(this,0,1,8,0);
-                 if (cell=="L"){
-                     this.x--;
-                     this.explodeStarted=false;
-                 }
-             }
-             var l=6-(this.y/SIZE-1.5)/2;
-             if (l<0)
-                 l=0;
-             this.load=Math.floor(l);
-             this.box.anims.play('box' + this.load, true);
-         }
-         else
-         {
-             this.explodeStarted=false;
-             this.angleDir=1;
-             this.angle=0;
-         }
-         if (this.explodeStarted){
-             this.explodeCounter++;
-             if (this.angle>10 || this.angle<-10)
-                 this.angleDir=-this.angleDir;
-             this.angle+=this.angleDir;
- //AQUI -> CONTADOR
-             this.box.angle=this.angle;
+    unload(){
+        this.unloading=true;
+        this.vx=1;
+        this.vy=0;
+    }
 
-             if (this.explodeCounter>300){
-                 //LOSE LIFE
-                 updateLives(-1);
-                 returnOrder="exploded";
-                 this.explodeCounter=0;
-             }
-         }
-         else{
-             this.box.angle=0;
-             this.explodeCounter=0;
-         }
+    deliver(){
+        this.loading=true;
+        this.vx=0;
+        this.vy=-1;
+        this.available=false;
+    }
  
-         this.box.x=this.x;        
-         this.box.y=this.y-4;        
-         return returnOrder;
+    update()
+    {
+        var returnOrder="";
+        if (this.loading){
+            this.x+=this.vx;
+            this.y+=this.vy;
+            if (this.y<SIZE*2+HALFSIZE-HALFSIZE)
+            {
+                this.y=SIZE*2+HALFSIZE-HALFSIZE;
+                this.vy=0;
+                this.vx=1;
+            }
+            if (this.x>24*SIZE-HALFSIZE)
+            {
+                this.loading=false;
+                this.vx=0;
+                returnOrder="loaded";
+            }
+        }
+
+        if (this.unloading){
+            this.x+=this.vx;
+            this.y+=this.vy;
+            if (this.x>SIZE*2+HALFSIZE){
+                this.x=SIZE*2+HALFSIZE;
+                this.vx=0;
+                this.vy=1;
+            }
+            if (this.y>SIZE*13+HALFSIZE)
+            {
+                this.y=SIZE*13+HALFSIZE;
+                this.vy=0;
+                this.unloading=false;
+                this.available=true;
+                this.explodeStarted=true;
+                returnOrder="offloaded";
+            }
+        };
+ 
+        if (!this.grabbed && !this.loading){
+            this.explodeStarted=true;
+            var cell=getCell(this,0,1,-8,0);
+            if (cell=="R")
+            {
+                this.x++;
+                this.explodeStarted=false;
+            }
+            else
+            {
+                cell=getCell(this,0,1,8,0);
+                if (cell=="L"){
+                    this.x--;
+                    this.explodeStarted=false;
+                }
+            }
+            var l=6-(this.y/SIZE-1.5)/2;
+            if (l<0)
+                l=0;
+            this.load=Math.floor(l);
+            this.box.anims.play('box' + this.load, true);
+        }
+        else
+        {
+            this.explodeStarted=false;
+            this.angleDir=1;
+            this.angle=0;
+        }
+        if (this.explodeStarted){
+            this.explodeCounter++;
+            if (this.angle>10 || this.angle<-10)
+                this.angleDir=-this.angleDir;
+            this.angle+=this.angleDir;
+            this.box.angle=this.angle;
+
+            if (this.explodeCounter>300){
+                //LOSE LIFE
+                updateLives(-1);
+                returnOrder="exploded";
+                this.explodeCounter=0;
+            }
+        }
+        else{
+            this.box.angle=0;
+            this.explodeCounter=0;
+        }
+ 
+        this.box.x=this.x;        
+        this.box.y=this.y-4;        
+        return returnOrder;
      }
  }
  
@@ -190,6 +214,7 @@ String.prototype.paddingLeft = function (paddingValue) {
              sprite=0;
          }
          this.canUnload=true;
+         this.nextX=-200*Math.random();
          this.truck = scene.physics.add.sprite(this.x,this.y, 'truck',sprite);
      }
  
@@ -210,7 +235,7 @@ String.prototype.paddingLeft = function (paddingValue) {
                      this.counter=0;
                  }
                  //OFFLOAD
-                 if (this.x<-100){
+                 if (this.x<this.nextX){
                      this.movingLeft=1;
                      this.counter=0;
                      this.counting=0;
@@ -231,11 +256,12 @@ String.prototype.paddingLeft = function (paddingValue) {
          if (this.x==SIZE && this.canUnload && this.counter==0){
              this.counting=1;
              this.counter=0;
+             this.nextX=-200*Math.random();
              returnOrder="offload";
          }
  
          this.counter+=this.counting;
-         if (this.counter>100){
+         if (this.counter>Math.random()*100){
              //should wait some cycles
              if (this.direction=="left")
                  this.movingLeft=-0.5;
@@ -515,7 +541,15 @@ String.prototype.paddingLeft = function (paddingValue) {
              offsetY: 1, color: '#000', fill:true
              }
      });
- }
+
+     //TEST BOX
+    //  var box=new Box(this,32*20, SIZE*3+HALFSIZE,nBoxes++);
+    //  box.unloading=false;
+    //  box.available=true;
+    //  box.loaded=false;
+    //  box.grabbed=false;
+    //  Boxes.push(box);
+    }
  
  function updateScore(){
     curGame.txtScore.setText(curGame.score.toString().paddingLeft("000000"));
@@ -554,7 +588,6 @@ String.prototype.paddingLeft = function (paddingValue) {
      {
          return;
      }
-     //this.input.enabled=true;
  
  //#region PLAYER MOVE
      var dir="";
@@ -658,6 +691,7 @@ String.prototype.paddingLeft = function (paddingValue) {
                              {
                                  box.x=playerr.x+SIZE;
                                  truck2.load=box.id;
+                                 box.deliver();
                              }
                              else
                                  box.x=playerr.x-SIZE;
@@ -670,35 +704,45 @@ String.prototype.paddingLeft = function (paddingValue) {
  
          }
  
-         if (box.update()=="exploded")
+         var boxUpdate=box.update();
+
+         if (boxUpdate=="exploded")
          {
              box.box.destroy();
              Boxes.splice(index,1);
          }
          else
          {
-            //GRAB BOX LEFT
-            if (box.available && Math.abs(box.y-playerl.y)<5 && Math.abs(playerl.x-box.x)<34){
-                grabPointsR.forEach(gP=>{
-                    if (Math.abs(gP-playerl.y)<2){
-                        box.grabbed=true;
-                        box.grabbedBy="L";
-                        playerl.grabbing=true;
-                    }
-                })
+             if (boxUpdate=="loaded"){
+                box.box.destroy();
+                this.score+=25;
+                updateScore();
+                Boxes.splice(index,1);
+             }
+             else{
+                //GRAB BOX LEFT
+                if (box.available && Math.abs(box.y-playerl.y)<5 && Math.abs(playerl.x-box.x)<34){
+                    grabPointsR.forEach(gP=>{
+                        if (Math.abs(gP-playerl.y)<2){
+                            box.grabbed=true;
+                            box.grabbedBy="L";
+                            playerl.grabbing=true;
+                        }
+                    })
+                }
+                //GRAB BOX RIGHT
+                if (box.available && Math.abs(box.y-playerr.y)<5 && Math.abs(playerr.x-box.x)<34){
+                    grabPointsL.forEach(gP=>{
+                        if (Math.abs(gP-playerr.y)<2){
+                            box.grabbed=true;
+                            box.grabbedBy="R";
+                            playerr.grabbing=true;
+                        }
+                    })
+                }
+                index++;
             }
-            //GRAB BOX RIGHT
-            if (box.available && Math.abs(box.y-playerr.y)<5 && Math.abs(playerr.x-box.x)<34){
-                grabPointsL.forEach(gP=>{
-                    if (Math.abs(gP-playerr.y)<2){
-                        box.grabbed=true;
-                        box.grabbedBy="R";
-                        playerr.grabbing=true;
-                    }
-                })
-            }
-            index++;
-
+    
          }
 
      }
