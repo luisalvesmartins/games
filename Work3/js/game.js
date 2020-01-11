@@ -9,6 +9,15 @@ String.prototype.paddingLeft = function (paddingValue) {
  var Machine=class{
     constructor(scene,x,y){
         this.machine=scene.physics.add.sprite(x,y,'machine',0);
+        this.x=x;
+        this.y=y;
+    }
+    dist(x,y){
+        if ((x-this.x)*(x-this.x) + (y-this.y)*(y-this.y)<(2*SIZE*2*SIZE))
+        {
+            emitter1.setPosition(this.x,this.y)
+            emitter1.explode();
+        }
     }
  }
  
@@ -274,6 +283,7 @@ String.prototype.paddingLeft = function (paddingValue) {
  }
  
  var Boxes=[];
+ var Machines=[];
  
  var plat;
  
@@ -307,6 +317,7 @@ String.prototype.paddingLeft = function (paddingValue) {
  
  function preload ()
  {
+    this.load.atlas('flares', 'Assets/flares.png', 'Assets/flares.json');
      this.load.spritesheet('ground', 'Assets/sprites' + SIZE + '.png', { frameWidth: SIZE, frameHeight: SIZE });
      this.load.spritesheet('roller', 'Assets/roller' + SIZE + '.png', { frameWidth: 500, frameHeight: 34 });
      this.load.spritesheet('truck', 'Assets/truck' + SIZE + '.png', { frameWidth: SIZE*2, frameHeight: SIZE*2 });
@@ -487,7 +498,8 @@ String.prototype.paddingLeft = function (paddingValue) {
              }
              if (plat[i][j]=="M")
              {
-                     var machine=new Machine(this,j*SIZE,i*SIZE);
+                var machine=new Machine(this,j*SIZE,i*SIZE);
+                Machines.push(machine);
              }
              lastPlat=plat[i][j];
          }
@@ -549,8 +561,21 @@ String.prototype.paddingLeft = function (paddingValue) {
     //  box.loaded=false;
     //  box.grabbed=false;
     //  Boxes.push(box);
-    }
- 
+    var particles = this.add.particles('flares');
+    emitter1=particles.createEmitter({
+        frame: ['blue','red','green','yellow'],
+        x: 385,
+        y: 300,
+        lifespan: 500,
+        speed: { min: 10, max: 100 },
+        gravityY: 300,
+        scale: { start: 0.2, end: 0 },
+        quantity: 5,
+        blendMode: 'SCREEN'
+    });
+    emitter1.explode()
+}
+ var emitter1;
  function updateScore(){
     curGame.txtScore.setText(curGame.score.toString().paddingLeft("000000"));
  }
@@ -704,6 +729,7 @@ String.prototype.paddingLeft = function (paddingValue) {
  
          }
  
+        
          var boxUpdate=box.update();
 
          if (boxUpdate=="exploded")
@@ -720,6 +746,10 @@ String.prototype.paddingLeft = function (paddingValue) {
                 Boxes.splice(index,1);
              }
              else{
+                Machines.forEach(m=>{
+                    m.dist(box.x,box.y);
+                })
+
                 //GRAB BOX LEFT
                 if (box.available && Math.abs(box.y-playerl.y)<5 && Math.abs(playerl.x-box.x)<34){
                     grabPointsR.forEach(gP=>{
