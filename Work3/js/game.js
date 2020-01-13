@@ -8,7 +8,7 @@ String.prototype.paddingLeft = function (paddingValue) {
  
  var Machine=class{
     constructor(scene,x,y){
-        this.machine=scene.physics.add.sprite(x,y,'machine',0);
+        this.machine=scene.physics.add.sprite(x,y,'assets','machine');
         this.x=x;
         this.y=y;
     }
@@ -30,7 +30,7 @@ String.prototype.paddingLeft = function (paddingValue) {
         this.id=num;
         this.x=x;
         this.y=y;
-        this.box = scene.physics.add.sprite(x, y, 'ground',2);
+        this.box = scene.physics.add.sprite(x, y, 'assets','wall');
         this.unloading=false;
         this.available=false;
         this.load=0;
@@ -162,7 +162,7 @@ String.prototype.paddingLeft = function (paddingValue) {
              this.level=5;
              this.x=SIZE*3+HALFSIZE;
              this.y=SIZE*13+HALFSIZE;
-             sprite=4;
+             sprite='player/left/0';
              this.anim="r";
              this.steps=[3,5,7,9,11,13];
          }
@@ -171,12 +171,12 @@ String.prototype.paddingLeft = function (paddingValue) {
              this.level=0;
              this.x=SIZE*21+HALFSIZE;
              this.y=SIZE*2+HALFSIZE;
-             sprite=0;
+             sprite='player/right/0';
              this.anim="l";
              this.steps=[2,3,5,7,9,11];
          }
          this.grabbing=false;
-         this.player = scene.physics.add.sprite(this.x, this.y, 'player', sprite);
+         this.player = scene.physics.add.sprite(this.x, this.y, 'assets', sprite);
      }
  
      update(dir){
@@ -223,18 +223,18 @@ String.prototype.paddingLeft = function (paddingValue) {
              this.x=-100;
              this.y=SIZE*13-4;
              this.movingLeft=1;
-             sprite=2;
+             sprite='truck/truckl/0';
          }
          else
          {
              this.x=24*SIZE+100;
              this.y=2*SIZE-4;
              this.movingLeft=-1;
-             sprite=0;
+             sprite='truck/truckr/0';
          }
          this.canUnload=true;
          this.nextX=-200*Math.random();
-         this.truck = scene.physics.add.sprite(this.x,this.y, 'truck',sprite);
+         this.truck = scene.physics.add.sprite(this.x,this.y, 'assets',sprite);
      }
  
      update(){
@@ -327,124 +327,220 @@ String.prototype.paddingLeft = function (paddingValue) {
  
  function preload ()
  {
-    this.load.atlas('flares', 'Assets/flares.png', 'Assets/flares.json');
-     this.load.spritesheet('ground', 'Assets/sprites' + SIZE + '.png', { frameWidth: SIZE, frameHeight: SIZE });
-     this.load.spritesheet('roller', 'Assets/roller' + SIZE + '.png', { frameWidth: 500, frameHeight: 34 });
-     this.load.spritesheet('truck', 'Assets/truck' + SIZE + '.png', { frameWidth: SIZE*2, frameHeight: SIZE*2 });
-     this.load.spritesheet('machine', 'Assets/machine' + SIZE + '.png', { frameWidth: SIZE*2, frameHeight: SIZE });
-     this.load.spritesheet('player', 'Assets/player' + SIZE + '.png', { frameWidth: SIZE, frameHeight: SIZE });
-     this.load.spritesheet('floor', 'Assets/floor' + SIZE + '.png', { frameWidth: SIZE, frameHeight: HALFSIZE });
-     this.load.spritesheet('lives', 'Assets/lives.png', { frameWidth: 16, frameHeight: 16 });
-     animplayerup=[8,9,10,9];
-     animplayerdown=[11,12,13,12]
-     animplayerrwait=[7,6,5,4,5,6,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7];
-     animplayerlwait=[0,1,2,3,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+     this.load.multiatlas('assets','assets/pack.json','assets');
+     this.load.atlas('flares', 'Assets/flares.png', 'Assets/flares.json');
+     
+     animplayerup=[
+        {key:'assets', frame:'player/climbup/0' },
+        {key:'assets', frame:'player/climbup/1' },
+        {key:'assets', frame:'player/climbup/2' },
+        {key:'assets', frame:'player/climbup/1' }
+     ];
+     animplayerdown=[
+        {key:'assets', frame:'player/climbdown/0' },
+        {key:'assets', frame:'player/climbdown/1' },
+        {key:'assets', frame:'player/climbdown/2' },
+        {key:'assets', frame:'player/climbdown/1' }
+    ]
+     animplayerrwait=[
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/2' },
+        {key:'assets', frame:'player/right/1' },
+        {key:'assets', frame:'player/right/0' },
+        {key:'assets', frame:'player/right/1' },
+        {key:'assets', frame:'player/right/2' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' },
+        {key:'assets', frame:'player/right/3' }
+    ];
+     animplayerlwait=[
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/1' },
+        {key:'assets', frame:'player/left/2' },
+        {key:'assets', frame:'player/left/3' },
+        {key:'assets', frame:'player/left/2' },
+        {key:'assets', frame:'player/left/1' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' },
+        {key:'assets', frame:'player/left/0' }
+    ];
  }
  var rect1,rect2,rect3,rect4;
  function create ()
  {
      curGame=this;
      //#region anims
+     var frames=[
+        {key:'assets', frame:'lives/0' },
+        {key:'assets', frame:'lives/1' },
+        {key:'assets', frame:'lives/2' },
+        {key:'assets', frame:'lives/1' },
+        {key:'assets', frame:'lives/0' },
+        {key:'assets', frame:'lives/0' },
+        {key:'assets', frame:'lives/0' },
+        {key:'assets', frame:'lives/0' },
+        {key:'assets', frame:'lives/0' },
+        {key:'assets', frame:'lives/0' },
+        {key:'assets', frame:'lives/0' },
+        {key:'assets', frame:'lives/0' },
+        {key:'assets', frame:'lives/0' },
+        {key:'assets', frame:'lives/0' },
+        {key:'assets', frame:'lives/0' },
+        {key:'assets', frame:'lives/0' }
+     ]
      this.anims.create({
          key: 'lives',
-         frames: this.anims.generateFrameNumbers('lives',{ frames:[0,2,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}),
+         frames: frames,
          frameRate: 5,
          repeat: -1
      });
      this.anims.create({
          key: 'truckr',
-         frames: this.anims.generateFrameNumbers('truck',{ frames:[0,1]}),
+         frames: [
+            {key:'assets', frame:'truck/truckr/0' },
+            {key:'assets', frame:'truck/truckr/1' }
+         ],
          frameRate: 5,
          repeat: -1
      });
      this.anims.create({
          key: 'truckl',
-         frames: this.anims.generateFrameNumbers('truck',{ frames:[2,3]}),
+         frames: [
+            {key:'assets', frame:'truck/truckl/0' },
+            {key:'assets', frame:'truck/truckl/1' }
+         ],
          frameRate: 5,
          repeat: -1
      });
  
      this.anims.create({
          key: 'playerlwait',
-         frames: this.anims.generateFrameNumbers('player',{ frames:animplayerlwait}),
+         frames: animplayerlwait,
          frameRate: 10,
          repeat: -1
      });
      this.anims.create({
          key: 'playerrwait',
-         frames: this.anims.generateFrameNumbers('player',{ frames:animplayerrwait}),
+         frames: animplayerrwait,
          frameRate: 10,
          repeat: -1
      });
      this.anims.create({
          key: 'playerlup',
-         frames: this.anims.generateFrameNumbers('player',{ frames:animplayerup}),
+         frames: animplayerup,
          frameRate: 10,
          repeat: -1
      });
      this.anims.create({
          key: 'playerldown',
-         frames: this.anims.generateFrameNumbers('player',{ frames:animplayerdown}),
+         frames: animplayerdown,
          frameRate: 10,
          repeat: -1
      });
      this.anims.create({
          key: 'playerrup',
-         frames: this.anims.generateFrameNumbers('player',{ frames:animplayerup}),
+         frames: animplayerup,
          frameRate: 10,
          repeat: -1
      });
      this.anims.create({
          key: 'playerrdown',
-         frames: this.anims.generateFrameNumbers('player',{ frames:animplayerdown}),
+         frames: animplayerdown,
          frameRate: 10,
          repeat: -1
      });    
+     var frameNames = this.anims.generateFrameNames('assets', {
+        start: 0, end: 1, 
+        prefix: 'roller/rolling/'
+     });
      this.anims.create({
          key: 'rollerr',
-         frames: this.anims.generateFrameNumbers('roller', { start: 0, end: 1 }),
+         frames: frameNames,
          frameRate: 5,
          repeat: -1
      });
      this.anims.create({
          key: 'rollerl',
-         frames: this.anims.generateFrameNumbers('roller', { start: 1, end: 0 }),
+         frames: frameNames,
          frameRate: 10,
          repeat: -1
      });
      this.anims.create({
          key: 'box0',
-         frames: this.anims.generateFrameNumbers('ground', { start: 2, end: 3 }),
+         frames: [
+            {key:'assets', frame:'car/0/0' },
+            {key:'assets', frame:'car/0/1' }
+         ],
          frameRate: 10,
          repeat: -1
      });
      this.anims.create({
          key: 'box1',
-         frames: this.anims.generateFrameNumbers('ground', { start: 4, end: 5 }),
+         frames: [
+            {key:'assets', frame:'car/1/0' },
+            {key:'assets', frame:'car/1/1' }
+         ],
          frameRate: 10,
          repeat: -1
      });
      this.anims.create({
          key: 'box2',
-         frames: this.anims.generateFrameNumbers('ground', { start: 6, end: 7 }),
+         frames: [
+            {key:'assets', frame:'car/2/0' },
+            {key:'assets', frame:'car/2/1' }
+         ],
          frameRate: 10,
          repeat: -1
      });
      this.anims.create({
          key: 'box3',
-         frames: this.anims.generateFrameNumbers('ground', { start: 8, end: 9 }),
+         frames: [
+            {key:'assets', frame:'car/3/0' },
+            {key:'assets', frame:'car/3/1' }
+         ],
          frameRate: 10,
          repeat: -1
      });
      this.anims.create({
          key: 'box4',
-         frames: this.anims.generateFrameNumbers('ground', { start: 10, end: 11 }),
+         frames: [
+            {key:'assets', frame:'car/4/0' },
+            {key:'assets', frame:'car/4/1' }
+         ],
          frameRate: 10,
          repeat: -1
      });
      this.anims.create({
          key: 'box5',
-         frames: this.anims.generateFrameNumbers('ground', { start: 12, end: 13 }),
+         frames: [
+            {key:'assets', frame:'car/5/0' },
+            {key:'assets', frame:'car/5/1' }
+         ],
          frameRate: 10,
          repeat: -1
      });
@@ -484,26 +580,26 @@ String.prototype.paddingLeft = function (paddingValue) {
          for(var j=0;j<plat[i].length;j++){
              if (plat[i][j]=="X"){
                  if (i>0 && plat[i-1][j]!="X"){
-                     platforms.create(j*SIZE+HALFSIZE, i*SIZE, 'floor',0,true,true );
+                     platforms.create(j*SIZE+HALFSIZE, i*SIZE, 'assets','floor',true,true );
                  }
-                 platforms.create(j*SIZE+HALFSIZE, i*SIZE+HALFSIZE, 'ground',0,true,true );
+                 platforms.create(j*SIZE+HALFSIZE, i*SIZE+HALFSIZE, 'assets','wall',true,true );
              }
              if (plat[i][j]=="x")
-                 platforms.create(j*SIZE+HALFSIZE, i*SIZE+HALFSIZE, 'ground',14,true,true );
+                 platforms.create(j*SIZE+HALFSIZE, i*SIZE+HALFSIZE, 'assets','halfwall',true,true );
              if (plat[i][j]=="S")
-                 platforms.create(j*SIZE+HALFSIZE, i*SIZE+HALFSIZE-4, 'ground',1,true,true );
+                 platforms.create(j*SIZE+HALFSIZE, i*SIZE+HALFSIZE-4, 'assets','ladder',true,true );
              if (plat[i][j]=="R")
              {
                  if (lastPlat!=plat[i][j]){
-                     var roller = this.physics.add.sprite(j*SIZE+HALFSIZE+7*SIZE + HALFSIZE+HALFSIZE,i*SIZE+8-8, 'roller');
-                     roller.anims.play('rollerr', true);
+                     var roller = this.physics.add.sprite(j*SIZE+HALFSIZE+7*SIZE + HALFSIZE+HALFSIZE,i*SIZE+8-8, 'assets','roller/rolling/0');
+                     //roller.anims.play('rollerr', true);
                  }
              }
              if (plat[i][j]=="L")
              {
                  if (lastPlat!=plat[i][j]){
-                     var roller = this.physics.add.sprite(j*SIZE+SIZE+7*SIZE + HALFSIZE,i*SIZE+8-8, 'roller');
-                     roller.anims.play('rollerl', true);
+                     var roller = this.physics.add.sprite(j*SIZE+SIZE+7*SIZE + HALFSIZE,i*SIZE+8-8, 'assets','roller/rolling/0');
+                     //roller.anims.play('rollerl', true);
                  }
              }
              if (plat[i][j]=="M")
@@ -550,7 +646,7 @@ String.prototype.paddingLeft = function (paddingValue) {
      this.livespr=[]
      for(var i=0;i<this.lives;i++)
      {
-         this.livespr[i]=this.add.sprite(16+i*18+8,16+16+4,"lives",0);
+         this.livespr[i]=this.add.sprite(16+i*18+8,16+16+4,"assets","lives/0");
          this.livespr[i].anims.play("lives",true,i);
      }
  
@@ -601,7 +697,7 @@ String.prototype.paddingLeft = function (paddingValue) {
      {
          if (i>=curGame.lives){
             curGame.livespr[i].anims.stop();
-            curGame.livespr[i].setFrame(1);
+            curGame.livespr[i].setFrame('lives/dead');
          }
      }
  }
