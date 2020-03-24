@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- textFit: https://github.com/STRML/textFit -->
+    <script src="jslibs/textFit.min.js"></script>
+    <title>Document</title>
+</head>
+<body>
+    <div class="box" style="width:200px;height:100px;border:1px solid">
+        Title
+      </div>
+
+      <div>NAME</div>
+      <div><input type="text" id="txtName" value="user"></div>
+      <div><button id="btnChangeName">Change Name</button></div>
+  
+
+    <div>INSERT ID</div>
+    <div><input type="text" id="txtID" value="12"></div>
+    <div><button id="btnJoinID">Join ID</button></div>
+
+    <div><button id="btnCreateID">Create ID</button></div>
+
+    <div style="border:1px solid;margin:2px;">
+      <div>CHAT</div>
+      <div style="height:300px;overflow-y: auto;">
+        <div id="divChat"></div>
+      </div>
+      <div><Input type="text" id="txtChat"></div>
+      <div><button id="btnSendChat">Send</button></div>
+    </div>
+
+    <script>
+        textFit(document.getElementsByClassName('box'),{alignHoriz: true, alignVert: true});
+        
+        var socket=io();
+
+        socket.on('newID', function(msg){
+            document.getElementById("txtID").value=msg;
+        });
+        socket.on('gameStart', function(){
+            alert("GAME START")
+        });
+        socket.on('chatMessage', function(msg){
+            switch (msg.e) {
+                case 0:
+                    document.getElementById("divChat").innerHTML+=msg.t + "<br>";
+                    break;
+                case 1:
+                    document.getElementById("divChat").innerHTML+="<div style='color:red'>" + msg.t + "</div>";
+                    break;
+                case 2:
+                    document.getElementById("divChat").innerHTML+="<div style='color:green'>" + msg.t + "</div>";
+                    break;
+                default:
+                    document.getElementById("divChat").innerHTML+="<div style='color:yellow'>" + msg.t + "</div>";
+                    break;
+            }
+            document.getElementById("divChat").parentElement.scrollTop=10000;
+        });
+
+        var Actions={
+            createID:function(){
+                socket.emit('createGame', 'nothing');
+            },
+            joinID:function(){
+                socket.emit('joinGame', document.getElementById("txtID").value);
+            },
+            changeName:function(){
+                socket.emit('changeName', document.getElementById("txtName").value);
+            },
+            sendChatMessage:function(){
+                socket.emit('chatMessage',document.getElementById("txtChat").value)
+            }
+        }
+
+        document.getElementById("btnCreateID").addEventListener("click",Actions.createID,false);
+        document.getElementById("btnJoinID").addEventListener("click",Actions.joinID,false);
+        document.getElementById("btnChangeName").addEventListener("click",Actions.changeName,false);
+        document.getElementById("btnSendChat").addEventListener("click",Actions.sendChatMessage,false);
+        
+    </script>
+
+</body>
+</html>
