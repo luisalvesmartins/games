@@ -882,8 +882,5 @@ String.prototype.paddingLeft = function (paddingValue) {
          }
 
      }
- 
-     //check proximity
- 
  }
  
