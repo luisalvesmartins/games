@@ -1,0 +1,8 @@
+{
+    "appService.zipIgnorePattern": [
+        "node_modules{,/**}",
+        ".vscode{,/**}"
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/d3d5449e-6547-4e35-974c-ba264d2bb450/resourceGroups/toma5/providers/Microsoft.Web/sites/toma5",
+    "appService.deploySubpath": ""
+}

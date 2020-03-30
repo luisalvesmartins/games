@@ -1,0 +1,135 @@
+BODY, HTML {
+    margin:0;
+    height:100%;
+    overflow: hidden;
+    background-color: brown
+}
+.title{
+    color: bisque;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size:14pt;
+}
+#txtName{
+    background-color: brown;
+    color:white;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size:14pt;
+    border-left: 0;
+    border-top: 0;
+    border-right: 0;
+    border-bottom:2px dotted rgb(131, 33, 33);
+}
+.box{
+    border:3px solid burlywood;
+    border-radius: 6px;
+    background-color: bisque;
+    margin:2px;
+    padding:2px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size:12pt;
+}
+#divWin{
+    border:3px solid burlywood;
+    border-radius: 6px;
+    background-color: bisque;
+    margin:0 auto;
+    padding:2px;
+    width:300px;
+    position:relative;
+    top:200px;
+    font-size:12pt;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.winTitle{
+    color:brown;
+    font-weight: bold;
+    font-size:24pt;
+    font-family: Arial, Helvetica, sans-serif;
+    margin:0 auto;
+}
+#chatHost{
+    border:3px solid burlywood;
+    border-radius: 6px;
+    background-color: bisque;
+    margin:2px;
+    padding:2px;
+}
+#divChat{
+    width:215px;
+    font-size:8pt;
+    font-family: Arial, Helvetica, sans-serif;
+}
+#divChat>div{
+    font-size:8pt;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.areaTitle{
+    color:brown;
+    font-weight: bold;
+    font-size:12pt;
+    font-family: Arial, Helvetica, sans-serif;
+    margin:2px;
+    margin-left:5px;
+    margin-right:5px;
+    border-bottom: 1px solid brown;
+}
+.panel{
+    display:flex;
+    margin:2px;
+    width:100%;
+}
+.panel2{
+    display:flex;
+    margin:2px;
+    width:100%;
+    height: 100%;
+    flex-direction: column;
+    align-content:center;
+    justify-content: center; 
+}
+
+#scoreRegion
+{
+    position:absolute;
+    top:100px;
+    left:10px;
+    border:3px solid burlywood;
+    border-radius: 6px;
+    background-color: bisque;
+}
+#divScoreTable>div{
+    display:flex;
+}
+#divScoreTable>div>div{
+    width:40px;
+    text-align: center;
+}
+#divScoreTable>div>span{
+    width:50px;
+    text-align:center;
+    font:25px verdana;
+}
+#divScoreTable img{
+    width:30px;
+    height:30px;
+}
+
+.header{
+    background-color:#30D032;
+    background-image: url('assets/header.png');
+    background-repeat: no-repeat;
+    height:100px;
+}
+.header>DIV{
+    font-family: Arial, Helvetica, sans-serif;
+    position:absolute;
+    right:10px;bottom:10px;
+    font-size:50px;
+    font-weight: bold;
+    background-color: brown;
+    width:200px;
+    text-align: center;
+    color: bisque;
+    border:5px solid burlywood;
+    border-radius: 10px;
+}

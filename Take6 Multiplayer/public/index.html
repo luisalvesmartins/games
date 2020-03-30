@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=980px">
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- textFit: https://github.com/STRML/textFit -->
+    <!--<script src="jslibs/textFit.min.js"></script>-->
+    <script src="game.js"></script>
+    <script src="common.js"></script>
+    <title>Toma5</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <img id=imgBack src="assets/back.png" style="display:none">
+    <img id=imgMini src="assets/mini.png" style="display:none">
+    <img id=imgPattern src="assets/pattern.png" style="display:none">
+    <img id=imgSelPattern src="assets/selpattern.png" style="display:none">
+  
+    <div style="display:flex;flex-direction: column; width:99%;height:100%;">
+        <div class="header" style="width:100%;height:100px;position:relative;">
+            <div>TOMA5</div>
+        </div>
+
+        <div id="divWin">
+                <div style="display:flex;flex-direction: column;text-align: center;">
+                <div class=winTitle>GAME OVER</div>
+                <div>WINNERS</div>
+                <div id=divWinners></div>
+                <div style="cursor:pointer" onclick="restart()">&gt; RESTART &lt;</div>
+            </div>
+        </div>
+
+        <div id="panel1" class="panel2">
+            <div style="width:300px;margin:0 auto;">
+                <div style="display:flex;flex-direction: row;">
+                    <div class=title>Hello&nbsp;</div>
+                    <input type="text" id="txtName" value="user" class=inputwait/>
+                </div>
+                <br>
+
+                <div style="height:20px;text-align: center;cursor:pointer;" id="btnJoinRandom" class=box>Join a random game</div>
+                <div><br></div>
+                <div style="height:20px;text-align: center;cursor:pointer;" id="btnJoinID" class=box>Join an existing game</div>
+                <div><br></div>
+                <div style="height:20px;text-align: center;cursor:pointer;" id="btnCreateID" class=box>Create a new game</div>
+            </div>
+        </div>
+
+        <div id="panel2" class="panel2">
+            <div style="width:300px;margin:0 auto;" class=box>
+                <div id="divIns">
+                    <div class="areaTitle">INSTRUCTIONS</div>
+                    <div id="divJoin">Enter the game ID and press 'Enter'</div>
+                    <div id="divCreate">Share the game ID below with your friends. Click 'Start' to begin the game</div>
+                    <div><input type="text" id="txtID" value="12"></div>
+                </div>
+                <div id="divWaiting" style="display:none">
+                    <div><br></div>
+                    <div class="areaTitle">Waiting for players to join</div>
+                    <div id=divPlayerList>waiting...</div>
+                    <div><br></div>
+                    <div><button id="btnStart">Start</button></div>
+                    <div id="divWaitMessage" style="display:none">Waiting for creator to start the game</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel3" class="panel" style="height:100%;">
+            <div id="divBoard" style="width: 100%;">
+            
+                <canvas id=myCanvas width="700px" height="630px"></canvas>
+                <div id="scoreRegion">
+                    <div id="divScoreTable"></div>
+                </div>
+                    
+            </div>
+            <div id="chatHost" style="display: flex;flex-direction: column;">
+                <div class="areaTitle">CHAT</div>
+                <div style="overflow-y: auto; height: 100%;">
+                    <div id="divChat"></div>
+                </div>
+                <div style="display:flex;margin:4px">
+                    <Input type="text" id="txtChat">
+                    <button id="btnSendChat">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function restart(){
+            var userName=document.getElementById("txtName").value;
+            setCookie("toma6",JSON.stringify({m:-1,i:socket.id,u:userName}),7);
+            document.getElementById("divWin").style.display="none";
+            document.getElementById("panel1").style.display="flex";
+            document.getElementById("panel2").style.display="none";
+            document.getElementById("panel3").style.display="none";
+            document.getElementById("divChat").innerHTML="";
+        }
+        document.getElementById("divWin").style.display="none";
+        document.getElementById("panel1").style.display="none";
+        document.getElementById("panel2").style.display="none";
+        document.getElementById("panel3").style.display="none";
+
+        const names=["Mary","Mimosa","Maria","Daisy","Candie","Bully","Homer","Minnie","Chocolate","Flower","Angus","Dahlia","Rose","Smalls","Diesel","Beef","Bella","Midnight","Darla","Hammburger","Jasmine","Esmeralda","Maggie","Cupcake","Molly","Moon","BigMac","Ginger","Sweetie","Clarabelle","Spot","Sunny","Bovina","Booboo","Toro","Vanilla","Matador","Teacup","Moscow","Bessie","LovaBull","Annabelle","Gertie","Penelope","Heifer"];
+
+        var socket=io();
+
+        window.onload=function(){
+        //textFit(document.getElementsByClassName('box'),{alignHoriz: true, alignVert: true});
+        socket.on('joinedGame',function(msg){
+            if (document.getElementById("divPlayerList").innerHTML=="waiting...")
+                document.getElementById("divPlayerList").innerHTML="";
+            document.getElementById("divPlayerList").innerHTML+=msg + " joined<br>";
+        });
+        socket.on('newID', function(msg){
+            document.getElementById("txtID").value=msg;
+        });
+        socket.on('gameStart', function(msg){
+            console.log("GAME Create");
+            // var h=document.getElementById("divBoard").offsetHeight;
+            // var w=document.getElementById("divBoard").offsetWidth;
+            // document.getElementById("myCanvas").width=w + "px";
+            // document.getElementById("myCanvas").height=h + "px";
+            game.id=msg.id;
+            document.getElementById("txtID").value=game.id;
+            console.log("ID")
+            console.log(game.id)
+            game.hands=msg.h;
+            game.board=msg.b;
+            game.spaces=msg.sp;
+            game.scores=msg.s;
+            game.queue=[];
+            game.nPlayers=msg.np;
+            game.currentPlayer=msg.cp;
+            game.player=msg.p;
+
+            console.log(game);
+            Graphics.init("myCanvas");
+            Graphics.redrawBoard();
+
+            //SAVE THE CURRENT GAME ON COOKIE
+            var userName=document.getElementById("txtName").value;
+            setCookie("toma6",JSON.stringify({m:msg.id,i:socket.id,u:userName}),7);
+
+        });
+        socket.on('notvalidroom', function(){
+            document.getElementById("panel1").style.display="flex";
+        });
+        socket.on('gameStartReady', function(msg){
+            console.log("GAME START");
+
+            Graphics.init("myCanvas");
+            Graphics.redrawBoard();
+            document.getElementById("panel1").style.display="none";
+            document.getElementById("panel2").style.display="none";
+            document.getElementById("panel3").style.display="flex";
+
+            // //SAVE THE CURRENT GAME ON COOKIE
+            // var userName=document.getElementById("txtName").value;
+            // setCookie("toma6",JSON.stringify({m:msg.id,i:socket.id,u:userName}),7);
+
+        });
+        socket.on('redraw', function(msg){
+            console.log("redraw");
+            console.log(msg);
+
+            game.hands=msg.h;
+            game.board=msg.b;
+            game.spaces=msg.sp;
+            game.scores=msg.s;
+            game.nPlayers=msg.np;
+            game.currentPlayer=msg.cp;
+            game.player=msg.p;
+            game.win=msg.w;
+            game.status=msg.status;
+
+//display panel
+            //Actions.changeName();
+            //Actions.joinID();
+
+            if (game.status=="WAITING"){
+                document.getElementById("divIns").style.display="none";
+                document.getElementById("divWaiting").style.display="block";
+
+                document.getElementById("btnStart").style.display="none";
+                document.getElementById("divWaitMessage").style.display="block";
+                Actions.adv(2);
+            }
+            else{
+                Graphics.init("myCanvas");
+                Graphics.redrawBoard();
+                Actions.adv(3);
+            }
+
+            //SAVE THE CURRENT GAME ON COOKIE
+            var userName=document.getElementById("txtName").value;
+            setCookie("toma6",JSON.stringify({m:msg.id,i:socket.id,u:userName}),7);
+            if (game.win!=-1){
+                //TODO SHOW SCORE
+                document.getElementById("divWin").style.display="block";
+            }
+
+        });
+        socket.on('chatMessage', function(msg){
+            switch (msg.e) {
+                case 0:
+                    document.getElementById("divChat").innerHTML+=msg.t + "<br>";
+                    break;
+                case 1:
+                    document.getElementById("divChat").innerHTML+="<div style='color:red'>" + msg.t + "</div>";
+                    break;
+                case 2:
+                    document.getElementById("divChat").innerHTML+="<div style='color:green'>" + msg.t + "</div>";
+                    break;
+                default:
+                    document.getElementById("divChat").innerHTML+="<div style='color:yellow'>" + msg.t + "</div>";
+                    break;
+            }
+            document.getElementById("divChat").parentElement.scrollTop=10000;
+        });
+        socket.on('getRandomGame',function(msg){
+            console.log("ID")
+            console.log(msg)
+            document.getElementById("txtID").value=msg;
+            var userName=document.getElementById("txtName").value;
+            setCookie("toma6",JSON.stringify({m:msg,i:socket.id,u:userName}),7);
+            Actions.adv(2);
+        });
+        socket.on('playerMoved', function(msg){
+            console.log('playerMoved');
+            console.log(msg)
+
+            game.board=msg.b;
+            game.currentPlayer=msg.cp;
+            game.scores=msg.s;
+            game.win=msg.w;
+
+            var x=Graphics.leftOrigin();
+            for(let i=0;i<game.board.length;i++)
+            {
+                for(let j=0;j<game.board[i].length;j++){
+                    game.board[i][j].toX=x+(CardWidth+5)*(j+1);
+                    game.board[i][j].toY=(CardHeight+10)*i
+                    if (msg.lastMove.to==i && j==game.board[i].length-1){
+                        game.board[i][j].x=0;
+                        game.board[i][j].y=0;
+                        //FIX THE SPACE POSITION
+                        game.spaces[i+NUMBER_OF_ROWS].x=x+(CardWidth+5)*(j+2);
+                    }
+                    else
+                    {
+                        game.board[i][j].x=x+(CardWidth+5)*(j+1);
+                        game.board[i][j].y=(CardHeight+10)*i;
+                    }
+                }
+            }
+
+            Graphics.redrawBoard();
+            if (game.win!=-1){
+                //TODO SHOW SCORE
+                document.getElementById("divWin").style.display="block";
+            }
+        });
+        socket.on('playerMovedToCollect', function(msg){
+            console.log('playerMovedToCollect');
+            console.log(msg)
+
+            game.board=msg.b;
+            game.currentPlayer=msg.cp;
+            game.scores=msg.s;
+            game.win=msg.w;
+
+            var row=msg.lastMove.to;
+
+            var x=Graphics.leftOrigin();
+            for(let i=0;i<game.board.length;i++)
+            {
+                for(let j=0;j<game.board[i].length;j++){
+                    game.board[i][j].toX=x+(CardWidth+5)*(j+1);
+                    game.board[i][j].toY=(CardHeight+10)*i
+                    if (row==i && j==game.board[i].length-1){
+                        game.board[i][j].x=0;
+                        game.board[i][j].y=0;
+                        //FIX THE SPACE POSITION
+                        game.spaces[i+NUMBER_OF_ROWS].x=x+(CardWidth+5)*(j+2);
+                    }
+                    else
+                    {
+                        game.board[i][j].x=x+(CardWidth+5)*(j+1);
+                        game.board[i][j].y=(CardHeight+10)*i;
+                    }
+                }
+            }
+
+            for(let i=0;i<game.board[row].length;i++)
+            {
+                var elem=game.board[row][i];
+                elem.toX=-CardWidth*2;
+                elem.toY=0;
+            }
+            var x=Graphics.leftOrigin();
+            game.board[row][0].toX=x+(CardWidth+5)*(1);
+            game.board[row][0].toY=(CardHeight+10)*row
+
+            game.spaces[row+NUMBER_OF_ROWS].x=x+(CardWidth+5)*(2);
+            game.spaces[row+NUMBER_OF_ROWS].visible=false;
+
+
+            Graphics.redrawBoard();
+            if (game.win!=-1){
+                //TODO SHOW SCORE
+                document.getElementById("divWin").style.display="block";
+            }
+        });
+
+        document.getElementById("btnCreateID").addEventListener("click",Actions.createID,false);
+        document.getElementById("btnJoinID").addEventListener("click",Actions.joinID,false);
+        document.getElementById("btnJoinRandom").addEventListener("click",Actions.joinRandom,false);
+        document.getElementById("btnSendChat").addEventListener("click",Actions.sendChatMessage,false);
+        document.getElementById("btnStart").addEventListener("click",Actions.startGame,false);
+        document.getElementById("txtID").addEventListener("keyup",Actions.txtID_keyUp,false);
+        document.getElementById("txtName").addEventListener("keyup",Actions.txtName_keyUp,false);
+
+        //IF THERE'S A COOKIE
+        var kuk=getCookie("toma6");
+        if (kuk!=null){
+            kuk=JSON.parse(kuk);
+            //m - roomId
+            //i - socketId
+            //u - username
+            document.getElementById("txtName").value=kuk.u;
+            document.getElementById("txtID").value=kuk.m;
+            socket.emit('rejoinGame', kuk);
+        }
+        else
+        {
+            var i=Math.floor(names.length*Math.random());
+            document.getElementById("txtName").value=names[i];
+            document.getElementById("panel1").style.display="flex";
+        }
+
+        // Actions.changeName();
+        // Actions.createID();
+        // Actions.startGame();
+
+    }
+        
+const HandsYPos=60;
+const CardHeight=80;
+const CardWidth=80;
+const CardFontSize=44;
+const NUMBER_OF_ROWS=5;
+
+var step=3;
+
+var game={
+    currentPlayer:0,
+    nPlayers:2,
+    scores:[]
+};
+</script>
+</body>
+</html>
