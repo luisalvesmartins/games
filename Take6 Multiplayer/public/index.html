@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=980px">
     <script src="/socket.io/socket.io.js"></script>
-    <!-- textFit: https://github.com/STRML/textFit -->
-    <!--<script src="jslibs/textFit.min.js"></script>-->
     <script src="game.js"></script>
     <script src="common.js"></script>
+    <script src="jslibs/circleCounter.js"></script>
     <title>Toma5</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style/style.css">
+    <link rel="stylesheet" href="style/circleCounter.css">
 </head>
 <body>
     <img id=imgBack src="assets/back.png" style="display:none">
@@ -60,7 +60,10 @@
                     <div class="areaTitle">Waiting for players to join</div>
                     <div id=divPlayerList>waiting...</div>
                     <div><br></div>
-                    <div><button id="btnStart">Start</button></div>
+                    <div id="divStart" style="display:flex;justify-content: space-between;width:100%">
+                        <button id="btnStart">Start</button>
+                        <button id="btnAddAI">Add AI Player</button>
+                    </div>
                     <div id="divWaitMessage" style="display:none">Waiting for creator to start the game</div>
                 </div>
             </div>
@@ -73,12 +76,13 @@
                 <div id="scoreRegion">
                     <div id="divScoreTable"></div>
                 </div>
-                    
+                <div id="divCounter" style="display:none;width:80px;height:80px;position:absolute;left:10px;bottom:10px;">
+                </div>
             </div>
             <div id="chatHost" style="display: flex;flex-direction: column;">
                 <div class="areaTitle">CHAT</div>
                 <div style="overflow-y: auto; height: 100%;">
-                    <div id="divChat"></div>
+                    <div id="divChat" style="margin-left:2px;margin-right:2px"></div>
                 </div>
                 <div style="display:flex;margin:4px">
                     <Input type="text" id="txtChat">
@@ -102,7 +106,6 @@
         document.getElementById("panel2").style.display="none";
         document.getElementById("panel3").style.display="none";
 
-        const names=["Mary","Mimosa","Maria","Daisy","Candie","Bully","Homer","Minnie","Chocolate","Flower","Angus","Dahlia","Rose","Smalls","Diesel","Beef","Bella","Midnight","Darla","Hammburger","Jasmine","Esmeralda","Maggie","Cupcake","Molly","Moon","BigMac","Ginger","Sweetie","Clarabelle","Spot","Sunny","Bovina","Booboo","Toro","Vanilla","Matador","Teacup","Moscow","Bessie","LovaBull","Annabelle","Gertie","Penelope","Heifer"];
 
         var socket=io();
 
@@ -124,8 +127,7 @@
             // document.getElementById("myCanvas").height=h + "px";
             game.id=msg.id;
             document.getElementById("txtID").value=game.id;
-            console.log("ID")
-            console.log(game.id)
+            console.log("ID:" + game.id);
             game.hands=msg.h;
             game.board=msg.b;
             game.spaces=msg.sp;
@@ -135,13 +137,12 @@
             game.currentPlayer=msg.cp;
             game.player=msg.p;
 
-            console.log(game);
             Graphics.init("myCanvas");
             Graphics.redrawBoard();
 
             //SAVE THE CURRENT GAME ON COOKIE
             var userName=document.getElementById("txtName").value;
-            setCookie("toma6",JSON.stringify({m:msg.id,i:socket.id,u:userName}),7);
+            setCookie("toma6",JSON.stringify({m:msg.id,i:socket.id,u:userName,r:"S"}),7);
 
         });
         socket.on('notvalidroom', function(){
@@ -163,7 +164,6 @@
         });
         socket.on('redraw', function(msg){
             console.log("redraw");
-            console.log(msg);
 
             game.hands=msg.h;
             game.board=msg.b;
@@ -183,8 +183,12 @@
                 document.getElementById("divIns").style.display="none";
                 document.getElementById("divWaiting").style.display="block";
 
-                document.getElementById("btnStart").style.display="none";
-                document.getElementById("divWaitMessage").style.display="block";
+                if (msg.r!="S"){
+                    document.getElementById("divStart").style.display="none";
+                    document.getElementById("divWaitMessage").style.display="block";
+                }
+                else
+                    document.getElementById("divWaitMessage").style.display="none";
                 Actions.adv(2);
             }
             else{
@@ -195,12 +199,13 @@
 
             //SAVE THE CURRENT GAME ON COOKIE
             var userName=document.getElementById("txtName").value;
-            setCookie("toma6",JSON.stringify({m:msg.id,i:socket.id,u:userName}),7);
+            setCookie("toma6",JSON.stringify({m:msg.id,i:socket.id,u:userName,r:msg.r}),7);
             if (game.win!=-1){
                 //TODO SHOW SCORE
                 document.getElementById("divWin").style.display="block";
             }
 
+            ManageCounter();
         });
         socket.on('chatMessage', function(msg){
             switch (msg.e) {
@@ -228,9 +233,6 @@
             Actions.adv(2);
         });
         socket.on('playerMoved', function(msg){
-            console.log('playerMoved');
-            console.log(msg)
-
             game.board=msg.b;
             game.currentPlayer=msg.cp;
             game.scores=msg.s;
@@ -261,11 +263,10 @@
                 //TODO SHOW SCORE
                 document.getElementById("divWin").style.display="block";
             }
+            else
+                ManageCounter();
         });
         socket.on('playerMovedToCollect', function(msg){
-            console.log('playerMovedToCollect');
-            console.log(msg)
-
             game.board=msg.b;
             game.currentPlayer=msg.cp;
             game.scores=msg.s;
@@ -312,6 +313,8 @@
                 //TODO SHOW SCORE
                 document.getElementById("divWin").style.display="block";
             }
+            else
+                ManageCounter();
         });
 
         document.getElementById("btnCreateID").addEventListener("click",Actions.createID,false);
@@ -321,6 +324,9 @@
         document.getElementById("btnStart").addEventListener("click",Actions.startGame,false);
         document.getElementById("txtID").addEventListener("keyup",Actions.txtID_keyUp,false);
         document.getElementById("txtName").addEventListener("keyup",Actions.txtName_keyUp,false);
+        document.getElementById("txtChat").addEventListener("keyup",Actions.txtChat_keyUp,false);
+        document.getElementById("btnAddAI").addEventListener("click",Actions.addAI,false);
+        
 
         //IF THERE'S A COOKIE
         var kuk=getCookie("toma6");
@@ -335,8 +341,8 @@
         }
         else
         {
-            var i=Math.floor(names.length*Math.random());
-            document.getElementById("txtName").value=names[i];
+            var i=Math.floor(common.names.length*Math.random());
+            document.getElementById("txtName").value=common.names[i];
             document.getElementById("panel1").style.display="flex";
         }
 
@@ -345,7 +351,45 @@
         // Actions.startGame();
 
     }
-        
+   
+function ManageCounter(){
+    if (game.currentPlayer==game.player){
+            document.getElementById("divCounter").style.display="block";
+            circleCounter.start("divCounter", 10,20,unsolicitedPlay);
+        }
+}
+function unsolicitedPlay(){
+    circleCounter.stop();
+    document.getElementById("divCounter").style.display="none";
+    if (game.currentPlayer==game.player){
+        //PICK A RANDOM CARD AND PLAY IT
+        var c=Math.floor(game.hands.length*Math.random());
+        //possible moves
+        var possible=common.possibleMoves(game.hands[c],game.board);
+        if (possible)
+        {
+            if (possible.position<5)
+            {
+                userInteraction.lastCard=c;
+                userInteraction.moveTo(possible.row);
+            }
+            else
+            {
+                userInteraction.lastCard=c;
+                userInteraction.moveToCollect(possible.row);
+            }
+        }
+        else
+        {
+            //NO POSSIBLE MOVES
+            //PICK RANDOM ROW
+            var r=Math.floor(Math.random()*5);
+            userInteraction.lastCard=c;
+            userInteraction.moveToCollect(r);
+        }
+    }
+}
+
 const HandsYPos=60;
 const CardHeight=80;
 const CardWidth=80;

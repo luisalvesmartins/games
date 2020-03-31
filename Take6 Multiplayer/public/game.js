@@ -6,6 +6,7 @@ var Actions={
         document.getElementById("divCreate").style.display="block";
         socket.emit('createGame', 'nothing');
         document.getElementById("divWaiting").style.display="block";
+        document.getElementById("divPlayerList").innerHTML="waiting..."
         
         Actions.adv(2);
     },
@@ -37,9 +38,10 @@ var Actions={
         //Actions.adv(3);
     },
     sendChatMessage:function(){
-        console.log("MESSAGE")
-        console.log(document.getElementById("txtChat").value)
         socket.emit('chatMessage',document.getElementById("txtChat").value)
+    },
+    addAI:function(){
+        socket.emit('addAIPlayer',document.getElementById("txtID").value)
     },
     adv:function(id){
         document.getElementById("panel"+(id-1)).style.display="none";
@@ -48,13 +50,10 @@ var Actions={
     txtID_keyUp:function(e){
         if (e.key=="Enter"){
             //IF JOIN
-            console.log(Actions.mode)
             if (Actions.mode=="JOIN"){
                 document.getElementById("divWaiting").style.display="block";
                 document.getElementById("divIns").style.display="none";
                 document.getElementById("btnStart").style.display="none";
-
-                console.log("calling")
 
                 socket.emit('joinGame', document.getElementById("txtID").value, document.getElementById("txtName").value);
             }
@@ -64,6 +63,11 @@ var Actions={
     txtName_keyUp:function(e){
         if (e.key=="Enter"){
             socket.emit('changeName', document.getElementById("txtName").value);
+        }
+    },
+    txtChat_keyUp:function(e){
+        if (e.key=="Enter"){
+            socket.emit('chatMessage',document.getElementById("txtChat").value);
         }
     }
 }
@@ -417,8 +421,6 @@ var userInteraction={
                 {
                     if (found.card==userInteraction.lastCard)
                     {
-                        console.log("userInteraction.lastPossible")
-                        console.log(userInteraction.lastPossible)
                         //click na mesma carta deve mandar para o único green
                         if (userInteraction.lastPossible!=null)
                         {
@@ -439,8 +441,6 @@ var userInteraction={
                         for(let i=0;i<game.spaces.length;i++){
                             game.spaces[i].visible=false;
                         }
-                        console.log("possible")
-                        console.log(possible)
                         if (possible){
                             if (possible.position>=5)
                             {
@@ -471,12 +471,14 @@ var userInteraction={
                             //NORMAL PLAY
                             game.spaces[found.space].visible=false;
                             var row=found.space-NUMBER_OF_ROWS;
+                            document.getElementById("divCounter").style.display="none";
                             userInteraction.moveTo(row);
                         }
                         else
                         {
                             //PLAY & COLLECT
                             var row=found.space;
+                            document.getElementById("divCounter").style.display="none";
                             userInteraction.moveToCollect(row);
                         }
                     }
@@ -498,6 +500,7 @@ var userInteraction={
         return null;
     },
     moveTo:function(row){
+        circleCounter.stop();
         var col=game.board[row].length;
         var mobe={from:userInteraction.lastCard, to: row, roomID:document.getElementById("txtID").value};
     
@@ -520,7 +523,7 @@ var userInteraction={
     moveToCollect:function(row){
         //get all cards and score them
         //replace zero with the new one
-        console.log("ROW:" + row)
+        circleCounter.stop();
 
         for (let i=0;i<NUMBER_OF_ROWS;i++)
             game.spaces[i].visible=false;

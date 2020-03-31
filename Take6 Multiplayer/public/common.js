@@ -1,5 +1,7 @@
 (function(exports){
 
+    exports.names=["Mary","Mimosa","Maria","Daisy","Candie","Bully","Homer","Minnie","Chocolate","Flower","Angus","Dahlia","Rose","Smalls","Diesel","Beef","Bella","Midnight","Darla","Hammburger","Jasmine","Esmeralda","Maggie","Cupcake","Molly","Moon","BigMac","Ginger","Sweetie","Clarabelle","Spot","Sunny","Bovina","Booboo","Toro","Vanilla","Matador","Teacup","Moscow","Bessie","LovaBull","Annabelle","Gertie","Penelope","Heifer"];
+
     const NUMBER_OF_ROWS=5;
 
     exports.possibleMoves=function(card,board){
@@ -35,16 +37,11 @@
     }
 
     exports.nextPlayer=function(currentPlayer,nPlayers, hands,scores){
-        console.log("HANDS")
-        console.log(hands)
-        console.log(hands[currentPlayer].length)
         var cpCards=hands[currentPlayer].length;
 
         currentPlayer++;
         if (currentPlayer>=nPlayers)
             currentPlayer=0;
-            console.log("currentPlayer")
-            console.log(currentPlayer)
         // var possibleMoves=this.possibleMovesHand(currentPlayer,hands,board);
         var endGame=true;
         for(let i=0;i<nPlayers;i++){

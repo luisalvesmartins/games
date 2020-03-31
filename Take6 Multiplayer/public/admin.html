@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=980px">
+    <script src="/socket.io/socket.io.js"></script>
+    <title>Toma5 Admin</title>
+</head>
+<body>
+    <input type="text" id="pass">
+    <button onclick="go('')">LIST</button>
+    <button onclick="go('CLEAR')">CLEAR</button>
+    <div id="divRES"></div>
+
+    <script>
+        var socket=io();
+
+        socket.on('list',function(msg){
+            document.getElementById("divRES").innerHTML=JSON.stringify(msg);
+        });
+
+        function go(mode){
+            socket.emit("admin",mode,document.getElementById("pass").value);
+        }
+</script>
+</body>
+</html>
