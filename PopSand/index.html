@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="phaser.min.js"></script>
+</head>
+<body>
+    <div id="phaser-example"></div>
+<script>
+
+var config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    backgroundColor: '#1b1464',
+    parent: 'phaser-example',
+    physics: {
+        default: 'matter',
+        matter: {
+            gravity: {
+                x:0, y: 0
+            },
+        }
+    },
+    scene: {
+        preload: preload,
+        create: create,
+        update:update
+    }
+};
+
+var game = new Phaser.Game(config);
+
+function preload ()
+{
+    this.load.atlas('sheet', 'shapes.png', 'shapes.json');
+    this.load.json('shapes', 'cap.json');
+}
+
+function create ()
+{
+    var shapes = this.cache.json.get('shapes');
+    this.matter.world.setBounds(0, 0, game.config.width, game.config.height,   32, true, true, false, true);
+
+    this.add.image(396, 280, 'sheet', 'ground', {isStatic:true});
+    this.matter.add.sprite(380, 280, 'sheet', 'back', {shape: shapes.backoverlay, isStatic:true});
+
+    cap=this.matter.add.sprite(320, 50, 'sheet', 'cap25', {shape: shapes.cap25, isStatic:false});
+
+    gra=this.add.graphics();
+    
+}
+
+var cap=null;
+var gra;
+var last={};
+var newPath=""
+var P1={};
+var play=false;
+const DMAX=8;
+const DMAX2_12=DMAX*DMAX*12*12;
+
+function update(){
+    if (this.input.mousePointer.isDown){
+        if (play==false){
+            var d=(cap.x-this.input.x)*(cap.x-this.input.x)+(cap.y-this.input.y)*(cap.y-this.input.y)
+            if (d<12*12)
+            {
+                cap.setVelocity(0,0);
+                P1={x:cap.x,y:cap.y}
+                play=true;
+            }
+        }
+        if (play)
+        {
+            gra.clear();
+            gra.beginPath();
+            var dx=P1.x-this.input.x;
+            var dy=P1.y-this.input.y;
+            var d=(dx*dx)+(dy*dy)
+            last={x:this.input.x,y:this.input.y};
+            if (d>DMAX2_12){
+                d=DMAX2_12;
+                var a=Math.atan2(P1.y-this.input.y, P1.x-this.input.x);
+                var dx=Math.cos(a)*DMAX*12;
+                var dy=Math.sin(a)*DMAX*12;
+                dx=P1.x-dx;
+                dy=P1.y-dy;
+            }
+            else
+            {
+                dx=this.input.x;
+                dy=this.input.y;
+            }
+            var color=Phaser.Display.Color.GetColor(d/DMAX2_12*255,255-d/DMAX2_12*255,0);
+            gra.lineStyle(10,color);
+            gra.moveTo(P1.x,P1.y);
+            gra.lineTo(dx,dy)
+            gra.strokePath();
+        }
+    }
+    else
+    {
+        if (play){
+            gra.clear();
+            play=false;
+
+            var dx=P1.x-last.x;
+            var dy=P1.y-last.y;
+            var d=(dx*dx)+(dy*dy)
+            if (d>DMAX2_12){
+                d=DMAX2_12
+            }
+
+            var a=Math.atan2(P1.y-last.y, P1.x-last.x);
+            var dx=Math.cos(a)*d/(DMAX2_12)*10;
+            var dy=Math.sin(a)*d/(DMAX2_12)*10;
+            cap.setVelocity(dx,dy);
+        }
+    }
+}
+
+
+</script>
+</body>
+</html>
