@@ -20,7 +20,7 @@
   "dependencies": {
     "express": "^5.2.1",
     "hashmap": "^2.4.0",
-    "pug": "^3.0.2",
+    "pug": "^3.0.3",
     "socket.io": "^2.5.1"
   }
 }
